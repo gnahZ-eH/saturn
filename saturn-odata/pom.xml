@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <odata.version>4.6.0</odata.version>
+        <odata.version>4.7.1</odata.version>
     </properties>
 
     <dependencies>
