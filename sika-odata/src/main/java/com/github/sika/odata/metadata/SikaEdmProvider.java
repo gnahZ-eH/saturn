@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.github.saturn.odata.metadata;
+package com.github.sika.odata.metadata;
 
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
 import org.slf4j.Logger;
@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
+public class SikaEdmProvider extends CsdlAbstractEdmProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SaturnEdmProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SikaEdmProvider.class);
 
     private Map<String, Class<?>> entitiesMap        = new HashMap<>();
     private Map<String, Class<?>> enumsMap           = new HashMap<>();
