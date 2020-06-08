@@ -30,13 +30,25 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ODataEntityType {
+@Target(ElementType.FIELD)
+public @interface ODataProperty {
 
     String name() default "";
 
-    String namespace() default "";
+    String type() default "";
 
-    String[] keys() default { };
+    boolean nullable() default true;
+
+    String defaultValue() default "";
+
+    int maxLength() default 0;
+
+    int precision() default Integer.MAX_VALUE;
+
+    int scale() default Integer.MAX_VALUE;
+
+    long srid() default Long.MAX_VALUE;
+
+    boolean unicode() default true;
 
 }

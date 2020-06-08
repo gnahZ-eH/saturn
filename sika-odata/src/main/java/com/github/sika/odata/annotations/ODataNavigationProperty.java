@@ -31,12 +31,15 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface ODataEntityType {
+public @interface ODataNavigationProperty {
 
     String name() default "";
 
-    String namespace() default "";
+    String type() default "";
 
-    String[] keys() default { };
+    boolean nullable() default true;
 
+    String partner() default "";
+
+    boolean containsTarget() default false;
 }
