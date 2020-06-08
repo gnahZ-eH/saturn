@@ -31,12 +31,11 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface ODataEntityType {
+public @interface ODataComplexType {
 
     String name() default "";
 
     String namespace() default "";
 
-    String[] keys() default { };
-
+    boolean openType() default false;
 }

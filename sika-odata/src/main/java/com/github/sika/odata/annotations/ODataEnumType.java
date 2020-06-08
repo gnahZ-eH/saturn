@@ -24,6 +24,8 @@
 
 package com.github.sika.odata.annotations;
 
+import com.github.sika.odata.enums.PrimitiveType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -31,12 +33,11 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface ODataEntityType {
+public @interface ODataEnumType {
 
     String name() default "";
 
     String namespace() default "";
 
-    String[] keys() default { };
-
+    PrimitiveType underlyingType() default PrimitiveType.ED_INT32;
 }
