@@ -30,16 +30,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface ODataNavigationProperty {
+@Target(ElementType.TYPE)
+public @interface ODataActionImport {
 
     String name() default "";
 
-    String type() default "";
+    String entitySet() default "";
 
-    boolean nullable() default true;
+    String action() default "";
 
-    String partner() default "";
+    String namespace() default "";
 
-    boolean containsTarget() default false;
 }

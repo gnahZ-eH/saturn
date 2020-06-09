@@ -30,16 +30,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface ODataNavigationProperty {
-
-    String name() default "";
+@Target(ElementType.TYPE)
+public @interface ODataReturnType {
 
     String type() default "";
 
     boolean nullable() default true;
 
-    String partner() default "";
+    int maxLength() default Integer.MAX_VALUE;
 
-    boolean containsTarget() default false;
+    int precision() default Integer.MAX_VALUE;
+
+    int scale() default Integer.MAX_VALUE;
+
+    long srid() default Long.MAX_VALUE;
+
 }
