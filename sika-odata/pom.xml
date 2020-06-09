@@ -9,9 +9,16 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
         <odata.version>4.7.1</odata.version>
+        <spring-boot-jpa.version>2.3.0.RELEASE</spring-boot-jpa.version>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
+    <!-- Olingo -->
     <dependencies>
         <dependency>
             <groupId>org.apache.olingo</groupId>
@@ -50,5 +57,23 @@
             <version>${odata.version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- Spring-Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>${spring-boot-jpa.version}</version>
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

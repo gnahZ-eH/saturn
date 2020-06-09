@@ -24,29 +24,89 @@
 
 package com.github.sika.odata.metadata;
 
+
+import java.lang.annotation.Annotation;
+import java.util.*;
+
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
+import org.apache.olingo.server.api.ODataApplicationException;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.github.sika.odata.annotations.*;
 
 public class SikaEdmProvider extends CsdlAbstractEdmProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(SikaEdmProvider.class);
 
-    private Map<String, Class<?>> entitiesMap        = new HashMap<>();
-    private Map<String, Class<?>> enumsMap           = new HashMap<>();
-    private Map<String, Class<?>> actionsMap         = new HashMap<>();
-    private Map<String, Class<?>> actionImportsMap   = new HashMap<>();
-    private Map<String, Class<?>> functionsMap       = new HashMap<>();
-    private Map<String, Class<?>> functionImportsMap = new HashMap<>();
-    private Map<String, Class<?>> complexTypesMap    = new HashMap<>();
-    private Map<String, String>   entityTypesMap     = new HashMap<>();
+    private Map<String, Class<?>> entitySets      = new HashMap<>();
+    private Map<String, Class<?>> enums           = new HashMap<>();
+    private Map<String, Class<?>> actions         = new HashMap<>();
+    private Map<String, Class<?>> actionImports   = new HashMap<>();
+    private Map<String, Class<?>> functions       = new HashMap<>();
+    private Map<String, Class<?>> functionImports = new HashMap<>();
+    private Map<String, Class<?>> complexTypes    = new HashMap<>();
+    private Map<String, String>   entityTypes     = new HashMap<>();
 
     private String NAME_SPACE = null;
     private String DEFAULT_EDM_PKG = null;
+    private String CONTAINER_NAME = null;
+    private String SERVICE_ROOT = null;
 
+    public SikaEdmProvider initialize() throws ODataApplicationException {
+        ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(
+                ODataAction.class,
+                ODataActionImport.class,
+                ODataComplexType.class,
+                ODataEntitySet.class,
+                ODataEnumType.class,
+                ODataFunction.class,
+                ODataFunctionImport.class));
 
+        Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(DEFAULT_EDM_PKG);
 
+        for (BeanDefinition beanDefinition : beanDefinitions) {
+            Class<?> clazz = null;
+            try {
+                clazz = Class.forName(beanDefinition.getBeanClassName());
+            } catch (ClassNotFoundException e) {
+                throw new ODataApplicationException(e.getMessage(), HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
+            }
+            ODataAction         action         = clazz.getAnnotation(ODataAction.class);
+            ODataActionImport   actionImport   = clazz.getAnnotation(ODataActionImport.class);
+            ODataComplexType    complexType    = clazz.getAnnotation(ODataComplexType.class);
+            ODataEntitySet      entitySet      = clazz.getAnnotation(ODataEntitySet.class);
+            ODataEnumType       enumType       = clazz.getAnnotation(ODataEnumType.class);
+            ODataFunction       function       = clazz.getAnnotation(ODataFunction.class);
+            ODataFunctionImport functionImport = clazz.getAnnotation(ODataFunctionImport.class);
+
+            if (action != null) {
+                String name = action.name().isEmpty() ? clazz.getSimpleName() : action.name();
+                actions.put(name, clazz);
+                LOG.debug("Action {} is loaded...", name);
+            }
+
+            if (actionImport != null) {
+                String name = actionImport.name().isEmpty() ? clazz.getSimpleName() : actionImport.name();
+            }
+
+            if (complexType != null) {
+                // todo
+            }
+        }
+        return null;
+    }
+
+    private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {
+        ClassPathScanningCandidateComponentProvider provider =
+                new ClassPathScanningCandidateComponentProvider(false);
+        for (Class<? extends Annotation> annotation : annotations) {
+            provider.addIncludeFilter(new AnnotationTypeFilter(annotation));
+        }
+        return provider;
+    }
 }
