@@ -22,22 +22,51 @@
  * SOFTWARE.
  */
 
-package com.github.sika.odata.annotations;
+package com.github.saturn.odata.annotations;
 
-import com.github.sika.odata.enums.PrimitiveType;
+import com.github.saturn.odata.enums.PrimitiveType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * The edm:EnumType element represents an enumeration type in an entity model.
+ *
+ * The enumeration type element contains one or more child edm:Member elements defining the members of the
+ * enumeration type.
+ *
+ * For more details:
+ * http://docs.oasis-open.org/odata/odata/v4.0/os/part3-csdl/odata-v4.0-os-part3-csdl.html#_Toc372793947
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface ODataEnumType {
 
+    /**
+     * The edm:EnumType element MUST include a Name attribute whose value is a SimpleIdentifier.
+     * The value identifies the enumeration type and MUST be unique within its namespace.
+     *
+     * @return name of EnumType.
+     */
     String name() default "";
 
+    /**
+     * A schema is identified by a Namespace. All edm:Schema elements MUST have a Namespace defined
+     * through a Namespace attribute which MUST be unique within the document, and SHOULD be globally
+     * unique. A schema cannot span more than one document.
+     *
+     *  @return name of the Namespace.
+     */
     String namespace() default "";
 
+    /**
+     * An enumeration type MAY include an UnderlyingType attribute to specify an underlying type whose value
+     * MUST be one of Edm.Byte, Edm.SByte, Edm.Int16, Edm.Int32, or Edm.Int64. If the UnderlyingType attribute
+     * is not specified, Edm.Int32 is used as the underlying type.
+     *
+     * @return UnderlyingType of the EnumType.
+     */
     PrimitiveType underlyingType() default PrimitiveType.ED_INT32;
 }

@@ -22,20 +22,19 @@
  * SOFTWARE.
  */
 
-package com.github.sika.odata.annotations;
+package com.github.saturn.odata.enums;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public enum PrimitiveType {
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ODataComplexType {
+    ED_INT32("Edm.Int32");
 
-    String name() default "";
+    private final String type;
 
-    String namespace() default "";
+    private PrimitiveType(final String type) {
+        this.type = type;
+    }
 
-    boolean openType() default false;
+    public String getType() {
+        return type;
+    }
 }

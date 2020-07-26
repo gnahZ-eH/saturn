@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.github.sika.odata.metadata;
+package com.github.saturn.odata.metadata;
 
 
 import java.lang.annotation.Annotation;
@@ -37,11 +37,11 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.sika.odata.annotations.*;
+import com.github.saturn.odata.annotations.*;
 
-public class SikaEdmProvider extends CsdlAbstractEdmProvider {
+public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SikaEdmProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SaturnEdmProvider.class);
 
     private Map<String, Class<?>> entitySets      = new HashMap<>();
     private Map<String, Class<?>> enums           = new HashMap<>();
@@ -57,7 +57,7 @@ public class SikaEdmProvider extends CsdlAbstractEdmProvider {
     private String CONTAINER_NAME = null;
     private String SERVICE_ROOT = null;
 
-    public SikaEdmProvider initialize() throws ODataApplicationException {
+    public SaturnEdmProvider initialize() throws ODataApplicationException {
         ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(
                 ODataAction.class,
                 ODataActionImport.class,
@@ -92,13 +92,41 @@ public class SikaEdmProvider extends CsdlAbstractEdmProvider {
 
             if (actionImport != null) {
                 String name = actionImport.name().isEmpty() ? clazz.getSimpleName() : actionImport.name();
+                actionImports.put(name, clazz);
+                LOG.debug("Action {} is loaded...", name);
             }
 
             if (complexType != null) {
-                // todo
+                String name = complexType.name().isEmpty() ? clazz.getSimpleName() : complexType.name();
+                complexTypes.put(name, clazz);
+                LOG.debug("ComplexType {} is loaded...", name);
+            }
+
+            if (entitySet != null) {
+                String name = entitySet.name().isEmpty() ? clazz.getSimpleName() : entitySet.name();
+                entitySets.put(name, clazz);
+                LOG.debug("EntitySet {} is loaded...", name);
+            }
+
+            if (enumType != null) {
+                String name = enumType.name().isEmpty() ? clazz.getSimpleName() : enumType.name();
+                enums.put(name, clazz);
+                LOG.debug("EnumType {} is loaded...", name);
+            }
+
+            if (function != null) {
+                String name = function.name().isEmpty() ? clazz.getSimpleName() : function.name();
+                functions.put(name, clazz);
+                LOG.debug("Function {} is loaded...", name);
+            }
+
+            if (functionImport != null) {
+                String name = functionImport.name().isEmpty() ? clazz.getSimpleName() : functionImport.name();
+                functionImports.put(name, clazz);
+                LOG.debug("FunctionImport {} is loaded...", name);
             }
         }
-        return null;
+        return this;
     }
 
     private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {
