@@ -26,9 +26,16 @@ package com.github.saturn.odata.metadata;
 
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.*;
 
+import com.github.saturn.odata.utils.ClassUtils;
+import com.github.saturn.odata.utils.ODataUtils;
+import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
+import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
+import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
+import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -50,12 +57,9 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     private Map<String, Class<?>> functions       = new HashMap<>();
     private Map<String, Class<?>> functionImports = new HashMap<>();
     private Map<String, Class<?>> complexTypes    = new HashMap<>();
-    private Map<String, String>   entityTypes     = new HashMap<>();
+    private Map<String, Class<?>> entityTypes     = new HashMap<>();
 
-    private String NAME_SPACE = null;
-    private String DEFAULT_EDM_PKG = null;
-    private String CONTAINER_NAME = null;
-    private String SERVICE_ROOT = null;
+    private SaturnEdmContext context;
 
     public SaturnEdmProvider initialize() throws ODataApplicationException {
         ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(
@@ -67,7 +71,7 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
                 ODataFunction.class,
                 ODataFunctionImport.class));
 
-        Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(DEFAULT_EDM_PKG);
+        Set<BeanDefinition> beanDefinitions = provider.findCandidateComponents(context.getDefaultEdmPkg());
 
         for (BeanDefinition beanDefinition : beanDefinitions) {
             Class<?> clazz = null;
@@ -80,6 +84,7 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
             ODataActionImport   actionImport   = clazz.getAnnotation(ODataActionImport.class);
             ODataComplexType    complexType    = clazz.getAnnotation(ODataComplexType.class);
             ODataEntitySet      entitySet      = clazz.getAnnotation(ODataEntitySet.class);
+            ODataEntityType     entityType     = clazz.getAnnotation(ODataEntityType.class);
             ODataEnumType       enumType       = clazz.getAnnotation(ODataEnumType.class);
             ODataFunction       function       = clazz.getAnnotation(ODataFunction.class);
             ODataFunctionImport functionImport = clazz.getAnnotation(ODataFunctionImport.class);
@@ -108,6 +113,12 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
                 LOG.debug("EntitySet {} is loaded...", name);
             }
 
+            if (entityType != null) {
+                String name = entityType.name().isEmpty() ? clazz.getSimpleName() : entityType.name();
+                entityTypes.put(name, clazz);
+                LOG.debug("EntityType {} is loaded...", name);
+            }
+
             if (enumType != null) {
                 String name = enumType.name().isEmpty() ? clazz.getSimpleName() : enumType.name();
                 enums.put(name, clazz);
@@ -127,6 +138,19 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
             }
         }
         return this;
+    }
+
+    @Override
+    public CsdlEntityType getEntityType(FullQualifiedName entityTypeName) throws ODataException {
+        Class<?> clazz = entityTypes.get(entityTypeName.getName());
+        if (clazz == null) return null;
+
+        ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
+        List<Field> fields = ClassUtils.getFields(clazz);
+        List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, context);
+        // todo
+
+        return super.getEntityType(entityTypeName);
     }
 
     private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {

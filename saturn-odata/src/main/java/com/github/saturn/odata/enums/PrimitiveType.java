@@ -24,11 +24,36 @@
 
 package com.github.saturn.odata.enums;
 
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public enum PrimitiveType {
 
-    ED_INT32("Edm.Int32");
+    EDM_INT32    ("Edm.Int32"),
+    EDM_INT64    ("Edm.Int64"),
+    EDM_STRING   ("Edm.String"),
+    EDM_DATE     ("Edm.Date"),
+    EDM_DECIMAL  ("Edm.Decimal"),
+    EDM_DOUBLE   ("Edm.Double"),
+    EDM_BOOLEAN  ("Edm.Boolean"),
+    EDM_DATE_TIME("Edm.DateTimeOffset");
 
     private final String type;
+    public final static Map<String, EdmPrimitiveTypeKind> EDM_PT_BY_NAME;
+
+    static {
+        EDM_PT_BY_NAME = new HashMap<>(8);
+        EDM_PT_BY_NAME.put(EDM_INT32.type,     EdmPrimitiveTypeKind.Int32);
+        EDM_PT_BY_NAME.put(EDM_INT64.type,     EdmPrimitiveTypeKind.Int64);
+        EDM_PT_BY_NAME.put(EDM_STRING.type,    EdmPrimitiveTypeKind.String);
+        EDM_PT_BY_NAME.put(EDM_DATE.type,      EdmPrimitiveTypeKind.Date);
+        EDM_PT_BY_NAME.put(EDM_DECIMAL.type,   EdmPrimitiveTypeKind.Decimal);
+        EDM_PT_BY_NAME.put(EDM_DOUBLE.type,    EdmPrimitiveTypeKind.Double);
+        EDM_PT_BY_NAME.put(EDM_BOOLEAN.type,   EdmPrimitiveTypeKind.Boolean);
+        EDM_PT_BY_NAME.put(EDM_DATE_TIME.type, EdmPrimitiveTypeKind.DateTimeOffset);
+    }
 
     private PrimitiveType(final String type) {
         this.type = type;

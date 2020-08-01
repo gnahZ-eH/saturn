@@ -68,5 +68,5 @@ public @interface ODataEnumType {
      *
      * @return UnderlyingType of the EnumType.
      */
-    PrimitiveType underlyingType() default PrimitiveType.ED_INT32;
+    PrimitiveType underlyingType() default PrimitiveType.EDM_INT32;
 }
