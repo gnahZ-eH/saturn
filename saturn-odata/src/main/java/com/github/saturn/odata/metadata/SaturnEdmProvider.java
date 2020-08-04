@@ -24,17 +24,17 @@
 
 package com.github.saturn.odata.metadata;
 
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.*;
-
+import com.github.saturn.odata.exceptions.SaturnODataException;
 import com.github.saturn.odata.utils.ClassUtils;
 import com.github.saturn.odata.utils.ODataUtils;
+import com.github.saturn.odata.annotations.*;
+
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
+import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
+import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
@@ -44,7 +44,10 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.saturn.odata.annotations.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
 
@@ -148,9 +151,22 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
         ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
         List<Field> fields = ClassUtils.getFields(clazz);
         List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, context);
-        // todo
+        List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, context);
+        List<CsdlPropertyRef> csdlPropertyRefs = Arrays.stream(oDataEntityType.keys()).map(key -> new CsdlPropertyRef().setName(key)).collect(Collectors.toList());
 
-        return super.getEntityType(entityTypeName);
+        for (CsdlPropertyRef csdlPropertyRef : csdlPropertyRefs) {
+            String csdlPropertyRefName = csdlPropertyRef.getName();
+            boolean valid = csdlProperties.stream().anyMatch(c -> c.getName().equals(csdlPropertyRefName));
+            if (!valid) {
+                throw new SaturnODataException(String.format("The key %s does not exist in entity %s", csdlPropertyRefName, entityTypeName));
+            }
+        }
+
+        return new CsdlEntityType()
+                .setName(oDataEntityType.name())
+                .setProperties(csdlProperties)
+                .setNavigationProperties(csdlNavigationProperties)
+                .setKey(csdlPropertyRefs);
     }
 
     private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {
