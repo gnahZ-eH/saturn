@@ -35,6 +35,8 @@ import org.apache.olingo.commons.api.edm.provider.CsdlEntityType;
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
+import org.apache.olingo.commons.api.edm.provider.CsdlEntitySet;
+import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
@@ -167,6 +169,21 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
                 .setProperties(csdlProperties)
                 .setNavigationProperties(csdlNavigationProperties)
                 .setKey(csdlPropertyRefs);
+    }
+
+    @Override
+    public CsdlEntitySet getEntitySet(FullQualifiedName entityContainer, String entitySetName) throws ODataException {
+        Class<?> clazz = entitySets.get(entitySetName);
+        if (clazz == null) return null;
+
+        ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
+        List<Field> fields = ClassUtils.getFields(clazz);
+        List<CsdlNavigationPropertyBinding> csdlNavigationPropertyBindings = ODataUtils.getCsdlNavigationPropertyBindings(fields);
+
+        return new CsdlEntitySet()
+                .setName(entitySetName)
+                .setType(ODataUtils.generateFQN(oDataEntityType.namespace(), oDataEntityType.name()))
+                .setNavigationPropertyBindings(csdlNavigationPropertyBindings);
     }
 
     private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {
