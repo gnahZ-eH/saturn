@@ -24,13 +24,14 @@
 
 package com.github.saturn.odata.utils;
 
-import com.github.saturn.odata.annotations.ODataComplexType;
-import com.github.saturn.odata.annotations.ODataEnumType;
-import com.github.saturn.odata.annotations.ODataProperty;
+import com.github.saturn.odata.annotations.*;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.enums.PrimitiveType;
+
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
+import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
+import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,12 +141,95 @@ public class ODataUtils {
     }
 
     public static EdmPrimitiveTypeKind getEdmPrimitiveType(String type) {
-        EdmPrimitiveTypeKind edmPrimitiveTypeKind = null;
+        EdmPrimitiveTypeKind edmPrimitiveTypeKind;
         edmPrimitiveTypeKind = PrimitiveType.EDM_PT_BY_NAME.get(type);
         return edmPrimitiveTypeKind;
     }
 
     public static FullQualifiedName generateFQN(String namespace, String name) {
         return new FullQualifiedName(namespace, name);
+    }
+
+    public static List<CsdlNavigationProperty> getCsdlNavigationProperties(List<Field> fields, SaturnEdmContext context) {
+        List<CsdlNavigationProperty> csdlNavigationProperties = new ArrayList<>();
+
+        for (Field field : fields) {
+            ODataNavigationProperty oDataNavigationProperty = field.getAnnotation(ODataNavigationProperty.class);
+
+            if (oDataNavigationProperty != null) {
+                String propertyName = oDataNavigationProperty.name().isEmpty() ? field.getName() : oDataNavigationProperty.name();
+                String propertyTypeName = oDataNavigationProperty.type().isEmpty() ? null : oDataNavigationProperty.type();
+                boolean collectionType = false;
+
+                if (propertyTypeName == null) {
+                    Class<?> fieldType = field.getType();
+
+                    if (fieldType.isAssignableFrom(Collection.class)) {
+                        collectionType = true;
+                        Type type = field.getGenericType();
+
+                        if (type instanceof ParameterizedType) {
+                            ParameterizedType parameterizedType = (ParameterizedType) type;
+                            Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
+                            ODataEntityType oDataEntityType = argType.getAnnotation(ODataEntityType.class);
+                            propertyTypeName = oDataEntityType == null ? null : oDataEntityType.name();
+                        }
+                    } else {
+                        ODataEntityType oDataEntityType = fieldType.getAnnotation(ODataEntityType.class);
+                        propertyTypeName = oDataEntityType == null ? null : oDataEntityType.name();
+                    }
+                }
+
+                CsdlNavigationProperty csdlNavigationProperty = new CsdlNavigationProperty()
+                        .setName(propertyName)
+                        .setType(generateFQN(context.getNameSpace(), propertyTypeName))
+                        .setCollection(collectionType)
+                        .setNullable(oDataNavigationProperty.nullable());
+
+                if (!oDataNavigationProperty.partner().isEmpty()) {
+                    csdlNavigationProperty.setPartner(oDataNavigationProperty.partner());
+                }
+
+                csdlNavigationProperties.add(csdlNavigationProperty);
+            }
+        }
+        return csdlNavigationProperties;
+    }
+
+    public static List<CsdlNavigationPropertyBinding> getCsdlNavigationPropertyBindings(List<Field> fields) {
+        List<CsdlNavigationPropertyBinding> csdlNavigationPropertyBindings = new ArrayList<>();
+
+        for (Field field : fields) {
+            ODataNavigationProperty oDataNavigationProperty = field.getAnnotation(ODataNavigationProperty.class);
+
+            if (oDataNavigationProperty != null) {
+                String propertyName = oDataNavigationProperty.name().isEmpty() ? field.getName() : oDataNavigationProperty.name();
+                String propertyTypeName = oDataNavigationProperty.type().isEmpty() ? null : oDataNavigationProperty.type();
+
+                if (propertyTypeName == null) {
+                    Class<?> fieldType = field.getType();
+
+                    if (fieldType.isAssignableFrom(Collection.class)) {
+                        Type type = field.getGenericType();
+
+                        if (type instanceof ParameterizedType) {
+                            ParameterizedType parameterizedType = (ParameterizedType) type;
+                            Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
+                            ODataEntitySet oDataEntitySet = argType.getAnnotation(ODataEntitySet.class);
+                            propertyTypeName = oDataEntitySet == null ? null : oDataEntitySet.name();
+                        }
+                    } else {
+                        ODataEntitySet oDataEntitySet = fieldType.getAnnotation(ODataEntitySet.class);
+                        propertyTypeName = oDataEntitySet == null ? null : oDataEntitySet.name();
+                    }
+                }
+
+                CsdlNavigationPropertyBinding csdlNavigationPropertyBinding = new CsdlNavigationPropertyBinding()
+                        .setPath(propertyName)
+                        .setTarget(propertyTypeName);
+                csdlNavigationPropertyBindings.add(csdlNavigationPropertyBinding);
+            }
+        }
+        return csdlNavigationPropertyBindings;
     }
 }
