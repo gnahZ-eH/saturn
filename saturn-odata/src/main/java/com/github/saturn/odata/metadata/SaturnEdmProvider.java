@@ -37,6 +37,9 @@ import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlPropertyRef;
 import org.apache.olingo.commons.api.edm.provider.CsdlEntitySet;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
+import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
+import org.apache.olingo.commons.api.edm.provider.CsdlActionImport;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunctionImport;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.slf4j.Logger;
@@ -96,5 +99,51 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
                 .setName(entitySetName)
                 .setType(ODataUtils.generateFQN(oDataEntityType.namespace(), oDataEntityType.name()))
                 .setNavigationPropertyBindings(csdlNavigationPropertyBindings);
+    }
+
+    @Override
+    public CsdlComplexType getComplexType(FullQualifiedName complexTypeName) throws ODataException {
+        Class<?> clazz = context.getComplexTypes().get(complexTypeName.getName());
+        if (clazz == null) return null;
+
+        ODataComplexType oDataComplexType = clazz.getAnnotation(ODataComplexType.class);
+        List<Field> fields = ClassUtils.getFields(clazz);
+        List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, context);
+        List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, context);
+
+        return new CsdlComplexType()
+                .setName(oDataComplexType.name())
+                .setProperties(csdlProperties)
+                .setNavigationProperties(csdlNavigationProperties)
+                .setOpenType(oDataComplexType.openType());
+    }
+
+    @Override
+    public CsdlActionImport getActionImport(FullQualifiedName entityContainer, String actionImportName) throws ODataException {
+        Class<?> clazz = context.getActionImports().get(actionImportName);
+        if (clazz == null) return null;
+        ODataActionImport oDataActionImport = clazz.getAnnotation(ODataActionImport.class);
+
+        return new CsdlActionImport()
+                .setName(actionImportName)
+                .setEntitySet(oDataActionImport.entitySet())
+                .setAction(ODataUtils.generateFQN(oDataActionImport.namespace(), oDataActionImport.name()));
+    }
+
+    @Override
+    public CsdlFunctionImport getFunctionImport(FullQualifiedName entityContainer, String functionImportName) throws ODataException {
+        Class<?> clazz = context.getFunctionImports().get(functionImportName);
+        if (clazz == null) return null;
+        ODataFunctionImport oDataFunctionImport = clazz.getAnnotation(ODataFunctionImport.class);
+
+        CsdlFunctionImport csdlFunctionImport = new CsdlFunctionImport()
+                .setName(functionImportName)
+                .setFunction(ODataUtils.generateFQN(oDataFunctionImport.namespace(), oDataFunctionImport.name()));
+
+        if (!oDataFunctionImport.entitySet().trim().isEmpty()) {
+            csdlFunctionImport.setEntitySet(oDataFunctionImport.entitySet());
+        }
+
+        return csdlFunctionImport;
     }
 }
