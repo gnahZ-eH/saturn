@@ -31,20 +31,25 @@ import java.util.Map;
 
 public enum PrimitiveType {
 
-    EDM_INT32    ("Edm.Int32"),
-    EDM_INT64    ("Edm.Int64"),
-    EDM_STRING   ("Edm.String"),
-    EDM_DATE     ("Edm.Date"),
-    EDM_DECIMAL  ("Edm.Decimal"),
-    EDM_DOUBLE   ("Edm.Double"),
-    EDM_BOOLEAN  ("Edm.Boolean"),
-    EDM_DATE_TIME("Edm.DateTimeOffset");
+    EDM_BYTE      ("Edm.Byte"),
+    EDM_SBYTE     ("Edm.SByte"),
+    EDM_INT16     ("Edm.Int16"),
+    EDM_INT32     ("Edm.Int32"),
+    EDM_INT64     ("Edm.Int64"),
+    EDM_STRING    ("Edm.String"),
+    EDM_DATE      ("Edm.Date"),
+    EDM_DECIMAL   ("Edm.Decimal"),
+    EDM_DOUBLE    ("Edm.Double"),
+    EDM_BOOLEAN   ("Edm.Boolean"),
+    EDM_DATE_TIME ("Edm.DateTimeOffset");
 
     private final String type;
-    public final static Map<String, EdmPrimitiveTypeKind> EDM_PT_BY_NAME;
+    public final static Map<String, EdmPrimitiveTypeKind> EDM_PT_BY_NAME = new HashMap<>();
 
     static {
-        EDM_PT_BY_NAME = new HashMap<>(8);
+        EDM_PT_BY_NAME.put(EDM_BYTE.type,      EdmPrimitiveTypeKind.Byte);
+        EDM_PT_BY_NAME.put(EDM_SBYTE.type,     EdmPrimitiveTypeKind.SByte);
+        EDM_PT_BY_NAME.put(EDM_INT16.type,     EdmPrimitiveTypeKind.Int16);
         EDM_PT_BY_NAME.put(EDM_INT32.type,     EdmPrimitiveTypeKind.Int32);
         EDM_PT_BY_NAME.put(EDM_INT64.type,     EdmPrimitiveTypeKind.Int64);
         EDM_PT_BY_NAME.put(EDM_STRING.type,    EdmPrimitiveTypeKind.String);
@@ -55,7 +60,7 @@ public enum PrimitiveType {
         EDM_PT_BY_NAME.put(EDM_DATE_TIME.type, EdmPrimitiveTypeKind.DateTimeOffset);
     }
 
-    private PrimitiveType(final String type) {
+    PrimitiveType(final String type) {
         this.type = type;
     }
 
