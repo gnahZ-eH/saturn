@@ -42,6 +42,7 @@ import org.apache.olingo.commons.api.edm.provider.CsdlActionImport;
 import org.apache.olingo.commons.api.edm.provider.CsdlFunctionImport;
 import org.apache.olingo.commons.api.edm.provider.CsdlEnumType;
 import org.apache.olingo.commons.api.edm.provider.CsdlEnumMember;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.slf4j.Logger;
@@ -69,8 +70,8 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
 
         ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
         List<Field> fields = ClassUtils.getFields(clazz);
-        List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, context);
-        List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, context);
+        List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, context.getNameSpace());
+        List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, context.getNameSpace());
         List<CsdlPropertyRef> csdlPropertyRefs = Arrays.stream(oDataEntityType.keys()).map(key -> new CsdlPropertyRef().setName(key)).collect(Collectors.toList());
 
         for (CsdlPropertyRef csdlPropertyRef : csdlPropertyRefs) {
@@ -110,8 +111,8 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
 
         ODataComplexType oDataComplexType = clazz.getAnnotation(ODataComplexType.class);
         List<Field> fields = ClassUtils.getFields(clazz);
-        List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, context);
-        List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, context);
+        List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, context.getNameSpace());
+        List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, context.getNameSpace());
 
         return new CsdlComplexType()
                 .setName(oDataComplexType.name())
@@ -177,5 +178,11 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
             return csdlEnumType;
         }
         throw new SaturnODataException(String.format("%s is not an enum type", enumTypeName.getName()));
+    }
+
+    @Override
+    public List<CsdlFunction> getFunctions(FullQualifiedName functionName) throws ODataException {
+        CsdlFunction csdlFunction = ODataUtils.getFunction(functionName, context);
+        return csdlFunction == null ? null : Collections.singletonList(csdlFunction);
     }
 }

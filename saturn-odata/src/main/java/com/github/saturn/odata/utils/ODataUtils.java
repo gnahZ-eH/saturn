@@ -33,6 +33,9 @@ import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
+import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
+import org.apache.olingo.commons.api.edm.provider.CsdlParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +52,7 @@ import java.util.List;
 public class ODataUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ODataUtils.class);
 
-    public static List<CsdlProperty> getCsdlProperties(List<Field> fields, SaturnEdmContext context) {
+    public static List<CsdlProperty> getCsdlProperties(List<Field> fields, String contextNamespace) {
         List<CsdlProperty> csdlProperties = new ArrayList<>();
 
         for (Field field : fields) {
@@ -82,20 +85,20 @@ public class ODataUtils {
 
                             if (argType.isAnnotationPresent(ODataComplexType.class)) {
                                 ODataComplexType complexType = argType.getAnnotation(ODataComplexType.class);
-                                propertyType = new FullQualifiedName(
-                                        String.format(StringUtils.COLLECTION_QUALIFIED_NAME, complexType.namespace(), complexType.name()));
+                                propertyType = generateFQN(
+                                        generateCollectionType(complexType.namespace(), complexType.name()));
                             }
                         }
                     } else if (cpxType) {
                         ODataComplexType complexType = fieldType.getAnnotationsByType(ODataComplexType.class)[0];
-                        String namespace = complexType.namespace().isEmpty() ? context.getNameSpace() : complexType.namespace();
+                        String namespace = complexType.namespace().isEmpty() ? contextNamespace : complexType.namespace();
                         String name = complexType.name().isEmpty() ? fieldType.getSimpleName() : complexType.name();
                         propertyType = generateFQN(namespace, name);
                     } else {
                         ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
 
                         if (oDataEnumType != null) {
-                            String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
+                            String namespace = oDataEnumType.namespace().isEmpty() ? contextNamespace : oDataEnumType.namespace();
                             String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
                             propertyType = generateFQN(namespace, name);
                         }
@@ -118,39 +121,7 @@ public class ODataUtils {
         return csdlProperties;
     }
 
-    public static EdmPrimitiveTypeKind getEdmPrimitiveType(Class<?> type) {
-        if (type.isAssignableFrom(Integer.class)) {
-            return EdmPrimitiveTypeKind.Int32;
-        } else if (type.isAssignableFrom(Long.class)) {
-            return EdmPrimitiveTypeKind.Int64;
-        } else if (type.isAssignableFrom(Float.class) ||
-                   type.isAssignableFrom(Double.class)) {
-            return EdmPrimitiveTypeKind.Double;
-        } else if (type.isAssignableFrom(String.class)) {
-            return EdmPrimitiveTypeKind.String;
-        } else if (type.isAssignableFrom(Boolean.class)) {
-            return EdmPrimitiveTypeKind.Boolean;
-        } else if (type.isAssignableFrom(LocalDate.class)) {
-            return EdmPrimitiveTypeKind.Date;
-        } else if (type.isAssignableFrom(LocalDateTime.class)) {
-            return EdmPrimitiveTypeKind.DateTimeOffset;
-        } else if (type.isAssignableFrom(BigDecimal.class)) {
-            return EdmPrimitiveTypeKind.Decimal;
-        }
-        return null;
-    }
-
-    public static EdmPrimitiveTypeKind getEdmPrimitiveType(String type) {
-        EdmPrimitiveTypeKind edmPrimitiveTypeKind;
-        edmPrimitiveTypeKind = PrimitiveType.EDM_PT_BY_NAME.get(type);
-        return edmPrimitiveTypeKind;
-    }
-
-    public static FullQualifiedName generateFQN(String namespace, String name) {
-        return new FullQualifiedName(namespace, name);
-    }
-
-    public static List<CsdlNavigationProperty> getCsdlNavigationProperties(List<Field> fields, SaturnEdmContext context) {
+    public static List<CsdlNavigationProperty> getCsdlNavigationProperties(List<Field> fields, String contextNamespace) {
         List<CsdlNavigationProperty> csdlNavigationProperties = new ArrayList<>();
 
         for (Field field : fields) {
@@ -182,7 +153,7 @@ public class ODataUtils {
 
                 CsdlNavigationProperty csdlNavigationProperty = new CsdlNavigationProperty()
                         .setName(propertyName)
-                        .setType(generateFQN(context.getNameSpace(), propertyTypeName))
+                        .setType(generateFQN(contextNamespace, propertyTypeName))
                         .setCollection(collectionType)
                         .setNullable(oDataNavigationProperty.nullable());
 
@@ -231,5 +202,129 @@ public class ODataUtils {
             }
         }
         return csdlNavigationPropertyBindings;
+    }
+
+    public static CsdlFunction getFunction(FullQualifiedName fullQualifiedName, SaturnEdmContext context) {
+        String functionName = fullQualifiedName.getName();
+        Class<?> clazz = context.getFunctions().get(functionName);
+        if (clazz == null) return null;
+
+        ODataFunction oDataFunction = clazz.getAnnotation(ODataFunction.class);
+        ODataReturnType oDataReturnType = clazz.getAnnotation(ODataReturnType.class);
+        boolean isCollectionType;
+        CsdlFunction csdlFunction = new CsdlFunction()
+                .setName(oDataFunction.name())
+                .setBound(oDataFunction.isBound());
+
+        if (oDataFunction.isBound()) {
+            csdlFunction.setEntitySetPath(oDataFunction.entitySetPath());
+        }
+
+        if (oDataReturnType != null) {
+            isCollectionType = oDataReturnType.type().startsWith(StringUtils.COLLECTION);
+            CsdlReturnType csdlReturnType = new CsdlReturnType()
+                    .setNullable(oDataReturnType.nullable())
+                    .setScale(oDataReturnType.scale())
+                    .setPrecision(oDataReturnType.precision());
+
+            if (isCollectionType) {
+                csdlReturnType.setType(
+                        generateCollectionType(context.getNameSpace(), oDataReturnType.type()));
+            } else {
+                csdlReturnType.setType(oDataReturnType.type());
+            }
+            csdlFunction.setReturnType(csdlReturnType);
+        }
+
+        if (oDataFunction.isBound()) {
+            Class<?> entitySetPath = context.getEntitySets().get(oDataFunction.entitySetPath());
+            ODataEntityType oDataEntityType = entitySetPath.getAnnotation(ODataEntityType.class);
+            CsdlParameter csdlParameter = new CsdlParameter()
+                    .setName(oDataFunction.entitySetPath())
+                    .setType(generateFQN(oDataEntityType.namespace(), oDataEntityType.name()));
+            csdlFunction.getParameters().add(csdlParameter);
+        }
+
+        for (Field field : clazz.getDeclaredFields()) {
+            ODataParameter oDataParameter = field.getAnnotation(ODataParameter.class);
+
+            if (oDataParameter != null) {
+                Class<?> fieldType = field.getType();
+                String oDataParameterName = oDataParameter.name().trim().isEmpty() ?
+                        field.getName() : oDataParameter.name();
+                FullQualifiedName oDataParameterType = null;
+
+                if (oDataParameter.type().isEmpty()) {
+                    EdmPrimitiveTypeKind typeKind = getEdmPrimitiveType(fieldType);
+
+                    if (typeKind != null) {
+                        oDataParameterType = typeKind.getFullQualifiedName();
+                    } else {
+                        ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
+
+                        if (oDataEnumType != null) {
+                            String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
+                            String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
+                            oDataParameterType = generateFQN(namespace, name);
+                        }
+                    }
+                } else {
+                    EdmPrimitiveTypeKind typeKind = getEdmPrimitiveType(oDataParameter.type());
+
+                    if (typeKind != null) {
+                        oDataParameterType = typeKind.getFullQualifiedName();
+                    } else {
+                        oDataParameterType = generateFQN(oDataParameter.type());
+                    }
+                }
+
+                CsdlParameter csdlParameter = new CsdlParameter()
+                        .setName(oDataParameterName)
+                        .setType(oDataParameterType)
+                        .setNullable(oDataParameter.nullable());
+                csdlFunction.getParameters().add(csdlParameter);
+            }
+        }
+        return csdlFunction;
+    }
+
+    public static EdmPrimitiveTypeKind getEdmPrimitiveType(String type) {
+        EdmPrimitiveTypeKind edmPrimitiveTypeKind;
+        edmPrimitiveTypeKind = PrimitiveType.EDM_PT_BY_NAME.get(type);
+        return edmPrimitiveTypeKind;
+    }
+
+    public static EdmPrimitiveTypeKind getEdmPrimitiveType(Class<?> type) {
+        if (type.isAssignableFrom(Integer.class)) {
+            return EdmPrimitiveTypeKind.Int32;
+        } else if (type.isAssignableFrom(Long.class)) {
+            return EdmPrimitiveTypeKind.Int64;
+        } else if (type.isAssignableFrom(Float.class) ||
+                type.isAssignableFrom(Double.class)) {
+            return EdmPrimitiveTypeKind.Double;
+        } else if (type.isAssignableFrom(String.class)) {
+            return EdmPrimitiveTypeKind.String;
+        } else if (type.isAssignableFrom(Boolean.class)) {
+            return EdmPrimitiveTypeKind.Boolean;
+        } else if (type.isAssignableFrom(LocalDate.class)) {
+            return EdmPrimitiveTypeKind.Date;
+        } else if (type.isAssignableFrom(LocalDateTime.class)) {
+            return EdmPrimitiveTypeKind.DateTimeOffset;
+        } else if (type.isAssignableFrom(BigDecimal.class)) {
+            return EdmPrimitiveTypeKind.Decimal;
+        }
+        return null;
+    }
+
+    public static FullQualifiedName generateFQN(String namespace, String name) {
+        return new FullQualifiedName(namespace, name);
+    }
+
+    public static FullQualifiedName generateFQN(String fullName) {
+        return new FullQualifiedName(fullName);
+    }
+
+    public static String generateCollectionType(String namespace, String typeName) {
+        return String.format(StringUtils.COLLECTION_QUALIFIED_NAME, namespace, typeName);
     }
 }
