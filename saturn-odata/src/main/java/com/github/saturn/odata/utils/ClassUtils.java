@@ -29,7 +29,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ClassUtils {
+public final class ClassUtils {
+
+    private ClassUtils() { }
 
     public static List<Field> getFields(Class<?> clazz) {
         return getFields(clazz, true);

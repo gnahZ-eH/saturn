@@ -24,7 +24,9 @@
 
 package com.github.saturn.odata.utils;
 
-public class StringUtils {
+public final class StringUtils {
+
+    private StringUtils() { }
 
     public static final String COLLECTION_QUALIFIED_NAME = "Collection(%s.%s)";
 
@@ -35,5 +37,9 @@ public class StringUtils {
         if (s1 == null && s2 == null) return true;
         if (s1 == null || s2 == null) return false;
         return s1.equals(s2);
+    }
+
+    public static boolean isNotNull(String s) {
+        return s != null;
     }
 }

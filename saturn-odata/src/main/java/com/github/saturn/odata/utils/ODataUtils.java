@@ -36,6 +36,7 @@ import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
 import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
 import org.apache.olingo.commons.api.edm.provider.CsdlParameter;
+import org.apache.olingo.commons.api.edm.provider.CsdlAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +50,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ODataUtils {
+public final class ODataUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ODataUtils.class);
+
+    private ODataUtils() { }
 
     public static List<CsdlProperty> getCsdlProperties(List<Field> fields, String contextNamespace) {
         List<CsdlProperty> csdlProperties = new ArrayList<>();
@@ -211,32 +214,17 @@ public class ODataUtils {
 
         ODataFunction oDataFunction = clazz.getAnnotation(ODataFunction.class);
         ODataReturnType oDataReturnType = clazz.getAnnotation(ODataReturnType.class);
-        boolean isCollectionType;
         CsdlFunction csdlFunction = new CsdlFunction()
                 .setName(oDataFunction.name())
                 .setBound(oDataFunction.isBound());
 
-        if (oDataFunction.isBound()) {
-            csdlFunction.setEntitySetPath(oDataFunction.entitySetPath());
-        }
-
         if (oDataReturnType != null) {
-            isCollectionType = oDataReturnType.type().startsWith(StringUtils.COLLECTION);
-            CsdlReturnType csdlReturnType = new CsdlReturnType()
-                    .setNullable(oDataReturnType.nullable())
-                    .setScale(oDataReturnType.scale())
-                    .setPrecision(oDataReturnType.precision());
-
-            if (isCollectionType) {
-                csdlReturnType.setType(
-                        generateCollectionType(context.getNameSpace(), oDataReturnType.type()));
-            } else {
-                csdlReturnType.setType(oDataReturnType.type());
-            }
+            CsdlReturnType csdlReturnType = generateCsdlReturnType(oDataReturnType, context.getNameSpace());
             csdlFunction.setReturnType(csdlReturnType);
         }
 
         if (oDataFunction.isBound()) {
+            csdlFunction.setEntitySetPath(oDataFunction.entitySetPath());
             Class<?> entitySetPath = context.getEntitySets().get(oDataFunction.entitySetPath());
             ODataEntityType oDataEntityType = entitySetPath.getAnnotation(ODataEntityType.class);
             CsdlParameter csdlParameter = new CsdlParameter()
@@ -288,6 +276,88 @@ public class ODataUtils {
         return csdlFunction;
     }
 
+
+    public static CsdlAction getAction(FullQualifiedName fullQualifiedName, SaturnEdmContext context) {
+        String actionName = fullQualifiedName.getName();
+        Class<?> clazz = context.getActions().get(actionName);
+        if (clazz == null) return null;
+
+        ODataAction oDataAction = clazz.getAnnotation(ODataAction.class);
+        ODataReturnType oDataReturnType = clazz.getAnnotation(ODataReturnType.class);
+        CsdlAction csdlAction = new CsdlAction()
+                .setName(oDataAction.name())
+                .setBound(oDataAction.isBound());
+
+        if (oDataReturnType != null) {
+            CsdlReturnType csdlReturnType = generateCsdlReturnType(oDataReturnType, context.getNameSpace());
+            csdlAction.setReturnType(csdlReturnType);
+        }
+
+        if (oDataAction.isBound()) {
+            csdlAction.setEntitySetPath(oDataAction.entitySetPath());
+            Class<?> entitySetPath = context.getEntitySets().get(oDataAction.entitySetPath());
+            ODataEntityType oDataEntityType = entitySetPath.getAnnotation(ODataEntityType.class);
+            CsdlParameter csdlParameter = new CsdlParameter()
+                    .setName(oDataAction.entitySetPath())
+                    .setType(generateFQN(oDataEntityType.namespace(), oDataEntityType.name()));
+            csdlAction.getParameters().add(csdlParameter);
+        }
+
+        for (Field field : clazz.getDeclaredFields()) {
+            ODataParameter oDataParameter = field.getAnnotation(ODataParameter.class);
+
+            if (oDataParameter != null) {
+                Class<?> fieldType = field.getType();
+                String oDataParameterName = oDataParameter.name().trim().isEmpty() ?
+                        field.getName() : oDataParameter.name();
+                FullQualifiedName oDataParameterType = null;
+                boolean collectionType = false;
+
+                if (oDataParameter.type().isEmpty()) {
+                    EdmPrimitiveTypeKind typeKind = getEdmPrimitiveType(fieldType);
+
+                    if (typeKind != null) {
+                        oDataParameterType = typeKind.getFullQualifiedName();
+                    } else if (fieldType.isAssignableFrom(List.class)) {
+                        collectionType = true;
+                        Type type = field.getGenericType();
+
+                        if (type instanceof ParameterizedType) {
+                            ParameterizedType parameterizedType = (ParameterizedType) type;
+                            Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
+                            EdmPrimitiveTypeKind argTypeKind = getEdmPrimitiveType(argType);
+
+                            if (argTypeKind != null) {
+                                oDataParameterType = argTypeKind.getFullQualifiedName();
+                            } else {
+                                oDataParameterType = getFullQualifiedNameFromClassType(argType, context.getNameSpace());
+                            }
+                        }
+                    } else {
+                        oDataParameterType = getFullQualifiedNameFromClassType(fieldType, context.getNameSpace());
+                    }
+                } else {
+                    oDataParameterType = getEdmPrimitiveType(oDataParameter.type()).getFullQualifiedName();
+                }
+
+                CsdlParameter csdlParameter = new CsdlParameter()
+                        .setName(oDataParameterName)
+                        .setType(oDataParameterType)
+                        .setCollection(collectionType)
+                        .setNullable(oDataParameter.nullable());
+
+                if (oDataParameterType!= null &&
+                        oDataParameterType.equals(EdmPrimitiveTypeKind.Decimal.getFullQualifiedName())) {
+                    csdlParameter.setPrecision(oDataParameter.precision());
+                    csdlParameter.setScale(oDataParameter.scale());
+                }
+
+                csdlAction.getParameters().add(csdlParameter);
+            }
+        }
+        return csdlAction;
+    }
+
     public static EdmPrimitiveTypeKind getEdmPrimitiveType(String type) {
         EdmPrimitiveTypeKind edmPrimitiveTypeKind;
         edmPrimitiveTypeKind = PrimitiveType.EDM_PT_BY_NAME.get(type);
@@ -316,12 +386,64 @@ public class ODataUtils {
         return null;
     }
 
+    public static FullQualifiedName getFullQualifiedNameFromClassType(Class<?> clazz, String contextNamespace) {
+        FullQualifiedName fullQualifiedName = null;
+
+        if (clazz.isAnnotationPresent(ODataEnumType.class)) {
+            ODataEnumType oDataEnumType = clazz.getAnnotation(ODataEnumType.class);
+            String namespace = oDataEnumType.namespace().isEmpty() ? contextNamespace : oDataEnumType.namespace();
+            String name = oDataEnumType.name().isEmpty() ? clazz.getSimpleName() : oDataEnumType.name();
+            fullQualifiedName = generateFQN(namespace, name);
+        }
+
+        if (clazz.isAnnotationPresent(ODataEntityType.class)) {
+            ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
+            String namespace = oDataEntityType.namespace().isEmpty() ? contextNamespace : oDataEntityType.namespace();
+            String name = oDataEntityType.name().isEmpty() ? clazz.getSimpleName() : oDataEntityType.name();
+            fullQualifiedName = generateFQN(namespace, name);
+        }
+
+        if (clazz.isAnnotationPresent(ODataComplexType.class)) {
+            ODataComplexType oDataComplexType = clazz.getAnnotation(ODataComplexType.class);
+            String namespace = oDataComplexType.namespace().isEmpty() ? contextNamespace : oDataComplexType.namespace();
+            String name = oDataComplexType.name().isEmpty() ? clazz.getSimpleName() : oDataComplexType.name();
+            fullQualifiedName = generateFQN(namespace, name);
+        }
+
+        return fullQualifiedName;
+    }
+
+    public static CsdlReturnType generateCsdlReturnType(ODataReturnType oDataReturnType, String namespace) {
+        boolean isCollectionType = oDataReturnType.type().startsWith(StringUtils.COLLECTION);
+        CsdlReturnType csdlReturnType = new CsdlReturnType()
+                .setNullable(oDataReturnType.nullable())
+                .setScale(oDataReturnType.scale())
+                .setCollection(isCollectionType)
+                .setPrecision(oDataReturnType.precision());
+
+        if (isCollectionType) {
+            csdlReturnType.setType(
+                    generateCollectionType(namespace, getTypeStringFromCollection(oDataReturnType.type())));
+        } else {
+            csdlReturnType.setType(generateFQN(namespace, oDataReturnType.type()));
+        }
+        return csdlReturnType;
+    }
+
     public static FullQualifiedName generateFQN(String namespace, String name) {
+        name = getTypeStringFromCollection(name);
         return new FullQualifiedName(namespace, name);
     }
 
-    public static FullQualifiedName generateFQN(String fullName) {
-        return new FullQualifiedName(fullName);
+    public static String getTypeStringFromCollection(String s) {
+        if (StringUtils.isNotNull(s) && s.startsWith(StringUtils.COLLECTION)) {
+            s = s.substring(s.indexOf('(') + 1, s.length() - 1);
+        }
+        return s;
+    }
+
+    public static FullQualifiedName generateFQN(String namespaceAndName) {
+        return new FullQualifiedName(namespaceAndName);
     }
 
     public static String generateCollectionType(String namespace, String typeName) {
