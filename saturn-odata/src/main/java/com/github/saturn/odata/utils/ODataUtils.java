@@ -49,8 +49,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ODataUtils {
+public final class ODataUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ODataUtils.class);
+
+    private ODataUtils() { }
 
     public static List<CsdlProperty> getCsdlProperties(List<Field> fields, String contextNamespace) {
         List<CsdlProperty> csdlProperties = new ArrayList<>();

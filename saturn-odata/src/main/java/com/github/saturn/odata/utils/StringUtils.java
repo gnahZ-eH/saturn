@@ -24,7 +24,9 @@
 
 package com.github.saturn.odata.utils;
 
-public class StringUtils {
+public final class StringUtils {
+
+    private StringUtils() { }
 
     public static final String COLLECTION_QUALIFIED_NAME = "Collection(%s.%s)";
 
