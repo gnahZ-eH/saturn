@@ -38,4 +38,8 @@ public final class StringUtils {
         if (s1 == null || s2 == null) return false;
         return s1.equals(s2);
     }
+
+    public static boolean isNotNull(String s) {
+        return s != null;
+    }
 }
