@@ -4,8 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.saturn</groupId>
+    <parent>
+        <groupId>com.github.zhanghe</groupId>
+        <artifactId>saturn</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
     <artifactId>saturn-odata</artifactId>
+    <name>saturn-odata</name>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -13,13 +19,12 @@
         <java.version>1.8</java.version>
         <odata.version>4.7.1</odata.version>
         <spring-boot-jpa.version>2.3.0.RELEASE</spring-boot-jpa.version>
-
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-    <!-- Olingo -->
     <dependencies>
+        <!-- Olingo -->
         <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-commons-api</artifactId>
