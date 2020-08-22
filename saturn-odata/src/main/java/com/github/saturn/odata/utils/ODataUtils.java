@@ -218,16 +218,13 @@ public final class ODataUtils {
                 .setName(oDataFunction.name())
                 .setBound(oDataFunction.isBound());
 
-        if (oDataFunction.isBound()) {
-            csdlFunction.setEntitySetPath(oDataFunction.entitySetPath());
-        }
-
         if (oDataReturnType != null) {
             CsdlReturnType csdlReturnType = generateCsdlReturnType(oDataReturnType, context.getNameSpace());
             csdlFunction.setReturnType(csdlReturnType);
         }
 
         if (oDataFunction.isBound()) {
+            csdlFunction.setEntitySetPath(oDataFunction.entitySetPath());
             Class<?> entitySetPath = context.getEntitySets().get(oDataFunction.entitySetPath());
             ODataEntityType oDataEntityType = entitySetPath.getAnnotation(ODataEntityType.class);
             CsdlParameter csdlParameter = new CsdlParameter()
@@ -291,16 +288,13 @@ public final class ODataUtils {
                 .setName(oDataAction.name())
                 .setBound(oDataAction.isBound());
 
-        if (oDataAction.isBound()) {
-            csdlAction.setEntitySetPath(oDataAction.entitySetPath());
-        }
-
         if (oDataReturnType != null) {
             CsdlReturnType csdlReturnType = generateCsdlReturnType(oDataReturnType, context.getNameSpace());
             csdlAction.setReturnType(csdlReturnType);
         }
 
         if (oDataAction.isBound()) {
+            csdlAction.setEntitySetPath(oDataAction.entitySetPath());
             Class<?> entitySetPath = context.getEntitySets().get(oDataAction.entitySetPath());
             ODataEntityType oDataEntityType = entitySetPath.getAnnotation(ODataEntityType.class);
             CsdlParameter csdlParameter = new CsdlParameter()
@@ -335,47 +329,12 @@ public final class ODataUtils {
 
                             if (argTypeKind != null) {
                                 oDataParameterType = argTypeKind.getFullQualifiedName();
-                            }
-
-                            if (argType.isAnnotationPresent(ODataEnumType.class)) {
-                                ODataEnumType oDataEnumType = argType.getAnnotation(ODataEnumType.class);
-                                String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
-                                String name = oDataEnumType.name().isEmpty() ? argType.getSimpleName() : oDataEnumType.name();
-                                oDataParameterType = generateFQN(namespace, name);
-                            }
-
-                            if (argType.isAnnotationPresent(ODataEntityType.class)) {
-                                ODataEntityType oDataEntityType = argType.getAnnotation(ODataEntityType.class);
-                                String namespace = oDataEntityType.namespace().isEmpty() ? context.getNameSpace() : oDataEntityType.namespace();
-                                String name = oDataEntityType.name().isEmpty() ? argType.getSimpleName() : oDataEntityType.name();
-                                oDataParameterType = generateFQN(namespace, name);
-                            }
-
-                            if (argType.isAnnotationPresent(ODataComplexType.class)) {
-                                ODataComplexType oDataComplexType = argType.getAnnotation(ODataComplexType.class);
-                                String namespace = oDataComplexType.namespace().isEmpty() ? context.getNameSpace() : oDataComplexType.namespace();
-                                String name = oDataComplexType.name().isEmpty() ? argType.getSimpleName() : oDataComplexType.name();
-                                oDataParameterType = generateFQN(namespace, name);
+                            } else {
+                                oDataParameterType = getFullQualifiedNameFromClassType(argType, context.getNameSpace());
                             }
                         }
-
-                    } else if (fieldType.isAnnotationPresent(ODataEnumType.class)) {
-                        ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
-                        String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
-                        String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
-                        oDataParameterType = generateFQN(namespace, name);
-
-                    } else if (fieldType.isAnnotationPresent(ODataEntityType.class)) {
-                        ODataEntityType oDataEntityType = fieldType.getAnnotation(ODataEntityType.class);
-                        String namespace = oDataEntityType.namespace().isEmpty() ? context.getNameSpace() : oDataEntityType.namespace();
-                        String name = oDataEntityType.name().isEmpty() ? fieldType.getSimpleName() : oDataEntityType.name();
-                        oDataParameterType = generateFQN(namespace, name);
-
-                    } else if (fieldType.isAnnotationPresent(ODataComplexType.class)) {
-                        ODataComplexType oDataComplexType = fieldType.getAnnotation(ODataComplexType.class);
-                        String namespace = oDataComplexType.namespace().isEmpty() ? context.getNameSpace() : oDataComplexType.namespace();
-                        String name = oDataComplexType.name().isEmpty() ? fieldType.getSimpleName() : oDataComplexType.name();
-                        oDataParameterType = generateFQN(namespace, name);
+                    } else {
+                        oDataParameterType = getFullQualifiedNameFromClassType(fieldType, context.getNameSpace());
                     }
                 } else {
                     oDataParameterType = getEdmPrimitiveType(oDataParameter.type()).getFullQualifiedName();
@@ -425,6 +384,33 @@ public final class ODataUtils {
             return EdmPrimitiveTypeKind.Decimal;
         }
         return null;
+    }
+
+    public static FullQualifiedName getFullQualifiedNameFromClassType(Class<?> clazz, String contextNamespace) {
+        FullQualifiedName fullQualifiedName = null;
+
+        if (clazz.isAnnotationPresent(ODataEnumType.class)) {
+            ODataEnumType oDataEnumType = clazz.getAnnotation(ODataEnumType.class);
+            String namespace = oDataEnumType.namespace().isEmpty() ? contextNamespace : oDataEnumType.namespace();
+            String name = oDataEnumType.name().isEmpty() ? clazz.getSimpleName() : oDataEnumType.name();
+            fullQualifiedName = generateFQN(namespace, name);
+        }
+
+        if (clazz.isAnnotationPresent(ODataEntityType.class)) {
+            ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
+            String namespace = oDataEntityType.namespace().isEmpty() ? contextNamespace : oDataEntityType.namespace();
+            String name = oDataEntityType.name().isEmpty() ? clazz.getSimpleName() : oDataEntityType.name();
+            fullQualifiedName = generateFQN(namespace, name);
+        }
+
+        if (clazz.isAnnotationPresent(ODataComplexType.class)) {
+            ODataComplexType oDataComplexType = clazz.getAnnotation(ODataComplexType.class);
+            String namespace = oDataComplexType.namespace().isEmpty() ? contextNamespace : oDataComplexType.namespace();
+            String name = oDataComplexType.name().isEmpty() ? clazz.getSimpleName() : oDataComplexType.name();
+            fullQualifiedName = generateFQN(namespace, name);
+        }
+
+        return fullQualifiedName;
     }
 
     public static CsdlReturnType generateCsdlReturnType(ODataReturnType oDataReturnType, String namespace) {
