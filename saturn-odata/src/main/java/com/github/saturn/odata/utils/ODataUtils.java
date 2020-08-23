@@ -457,4 +457,8 @@ public final class ODataUtils {
     public static String generateCollectionType(String namespace, String typeName) {
         return String.format(StringUtils.COLLECTION_QUALIFIED_NAME, namespace, typeName);
     }
+
+    public static boolean isNull(FullQualifiedName fullQualifiedName) {
+        return fullQualifiedName == null;
+    }
 }

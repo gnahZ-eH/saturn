@@ -46,6 +46,8 @@ import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
 import org.apache.olingo.commons.api.edm.provider.CsdlAction;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.edm.provider.CsdlStructuralType;
+import org.apache.olingo.commons.api.edm.provider.CsdlEntityContainer;
+import org.apache.olingo.commons.api.edm.provider.CsdlEntityContainerInfo;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.slf4j.Logger;
@@ -255,5 +257,44 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
         csdlSchema.setEntityContainer(getEntityContainer());
 
         return Collections.singletonList(csdlSchema);
+    }
+
+    @Override
+    public CsdlEntityContainer getEntityContainer() throws ODataException {
+
+        CsdlEntityContainer csdlEntityContainer = new CsdlEntityContainer();
+        csdlEntityContainer.setName(context.getContainerName());
+        FullQualifiedName container = ODataUtils.generateFQN(context.getNameSpace(), context.getContainerName());
+
+        List<CsdlEntitySet>      csdlEntitySetList      = new ArrayList<>();
+        List<CsdlActionImport>   csdlActionImportList   = new ArrayList<>();
+        List<CsdlFunctionImport> csdlFunctionImportList = new ArrayList<>();
+
+        for (Map.Entry<String, Class<?>> entry : context.getEntitySets().entrySet()) {
+            csdlEntitySetList.add(getEntitySet(container, entry.getKey()));
+        }
+
+        for (Map.Entry<String, Class<?>> entry : context.getActionImports().entrySet()) {
+            csdlActionImportList.add(getActionImport(container, entry.getKey()));
+        }
+
+        for (Map.Entry<String, Class<?>> entry : context.getFunctionImports().entrySet()) {
+            csdlFunctionImportList.add(getFunctionImport(container, entry.getKey()));
+        }
+
+        csdlEntityContainer.setEntitySets(csdlEntitySetList);
+        csdlEntityContainer.setActionImports(csdlActionImportList);
+        csdlEntityContainer.setFunctionImports(csdlFunctionImportList);
+
+        return csdlEntityContainer;
+    }
+
+    @Override
+    public CsdlEntityContainerInfo getEntityContainerInfo(FullQualifiedName entityContainerName) throws ODataException {
+        FullQualifiedName container = ODataUtils.generateFQN(context.getNameSpace(), context.getContainerName());
+        if (ODataUtils.isNull(entityContainerName) || entityContainerName.equals(container)) {
+            return new CsdlEntityContainerInfo().setContainerName(container);
+        }
+        return null;
     }
 }
