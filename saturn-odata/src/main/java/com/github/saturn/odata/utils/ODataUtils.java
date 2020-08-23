@@ -358,6 +358,14 @@ public final class ODataUtils {
         return csdlAction;
     }
 
+    public static CsdlAction getAction(String namespace, String name, SaturnEdmContext context) {
+        return getAction(generateFQN(namespace, name), context);
+    }
+
+    public static CsdlFunction getFunction(String namespace, String name, SaturnEdmContext context) {
+        return getFunction(generateFQN(namespace, name), context);
+    }
+
     public static EdmPrimitiveTypeKind getEdmPrimitiveType(String type) {
         EdmPrimitiveTypeKind edmPrimitiveTypeKind;
         edmPrimitiveTypeKind = PrimitiveType.EDM_PT_BY_NAME.get(type);
@@ -365,16 +373,21 @@ public final class ODataUtils {
     }
 
     public static EdmPrimitiveTypeKind getEdmPrimitiveType(Class<?> type) {
-        if (type.isAssignableFrom(Integer.class)) {
+        if (type.isAssignableFrom(Integer.class) ||
+            type.isAssignableFrom(int.class)) {
             return EdmPrimitiveTypeKind.Int32;
-        } else if (type.isAssignableFrom(Long.class)) {
+        } else if (type.isAssignableFrom(Long.class) ||
+                   type.isAssignableFrom(long.class)) {
             return EdmPrimitiveTypeKind.Int64;
         } else if (type.isAssignableFrom(Float.class) ||
-                type.isAssignableFrom(Double.class)) {
+                   type.isAssignableFrom(float.class) ||
+                   type.isAssignableFrom(Double.class) ||
+                   type.isAssignableFrom(double.class)) {
             return EdmPrimitiveTypeKind.Double;
         } else if (type.isAssignableFrom(String.class)) {
             return EdmPrimitiveTypeKind.String;
-        } else if (type.isAssignableFrom(Boolean.class)) {
+        } else if (type.isAssignableFrom(Boolean.class) ||
+                   type.isAssignableFrom(boolean.class)) {
             return EdmPrimitiveTypeKind.Boolean;
         } else if (type.isAssignableFrom(LocalDate.class)) {
             return EdmPrimitiveTypeKind.Date;
@@ -448,5 +461,9 @@ public final class ODataUtils {
 
     public static String generateCollectionType(String namespace, String typeName) {
         return String.format(StringUtils.COLLECTION_QUALIFIED_NAME, namespace, typeName);
+    }
+
+    public static boolean isNull(FullQualifiedName fullQualifiedName) {
+        return fullQualifiedName == null;
     }
 }
