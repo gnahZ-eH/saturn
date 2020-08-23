@@ -44,6 +44,8 @@ import org.apache.olingo.commons.api.edm.provider.CsdlEnumType;
 import org.apache.olingo.commons.api.edm.provider.CsdlEnumMember;
 import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
 import org.apache.olingo.commons.api.edm.provider.CsdlAction;
+import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
+import org.apache.olingo.commons.api.edm.provider.CsdlStructuralType;
 import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.slf4j.Logger;
@@ -51,7 +53,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
@@ -193,5 +198,62 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     public List<CsdlAction> getActions(FullQualifiedName actionName) throws ODataException {
         CsdlAction csdlAction = ODataUtils.getAction(actionName, context);
         return csdlAction == null ? null : Collections.singletonList(csdlAction);
+    }
+
+    @Override
+    public List<CsdlSchema> getSchemas() throws ODataException {
+
+        CsdlSchema csdlSchema = new CsdlSchema();
+        csdlSchema.setNamespace(context.getNameSpace());
+
+        List<CsdlEntityType>  csdlEntityTypeList  = new ArrayList<>();
+        List<CsdlEnumType>    csdlEnumTypeList    = new ArrayList<>();
+        List<CsdlAction>      csdlActionList      = new ArrayList<>();
+        List<CsdlFunction>    csdlFunctionList    = new ArrayList<>();
+        List<CsdlComplexType> csdlComplexTypeList = new ArrayList<>();
+
+        for (Map.Entry<String, Class<?>> entry : context.getEntityTypes().entrySet()) {
+            ODataEntityType oDataEntityType = entry.getValue().getAnnotation(ODataEntityType.class);
+            String namespace = oDataEntityType.namespace().isEmpty() ? context.getNameSpace() : oDataEntityType.namespace();
+            String name = oDataEntityType.name().isEmpty() ? entry.getValue().getSimpleName() : oDataEntityType.name();
+            csdlEntityTypeList.add(getEntityType(ODataUtils.generateFQN(namespace, name)));
+        }
+
+        for (Map.Entry<String, Class<?>> entry : context.getEnums().entrySet()) {
+            ODataEnumType oDataEnumType = entry.getValue().getAnnotation(ODataEnumType.class);
+            String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
+            String name = oDataEnumType.name().isEmpty() ? entry.getValue().getSimpleName() : oDataEnumType.name();
+            csdlEnumTypeList.add(getEnumType(ODataUtils.generateFQN(namespace, name)));
+        }
+
+        for (Map.Entry<String, Class<?>> entry : context.getActions().entrySet()) {
+            ODataAction oDataAction = entry.getValue().getAnnotation(ODataAction.class);
+            String namespace = oDataAction.namespace().isEmpty() ? context.getNameSpace() : oDataAction.namespace();
+            String name = oDataAction.name().isEmpty() ? entry.getValue().getSimpleName() : oDataAction.name();
+            csdlActionList.add(ODataUtils.getAction(namespace, name, context));
+        }
+
+        for (Map.Entry<String, Class<?>> entry : context.getFunctions().entrySet()) {
+            ODataFunction oDataFunction = entry.getValue().getAnnotation(ODataFunction.class);
+            String namespace = oDataFunction.namespace().isEmpty() ? context.getNameSpace() : oDataFunction.namespace();
+            String name = oDataFunction.name().isEmpty() ? entry.getValue().getSimpleName() : oDataFunction.name();
+            csdlFunctionList.add(ODataUtils.getFunction(namespace, name, context));
+        }
+
+        for (Map.Entry<String, Class<?>> entry : context.getComplexTypes().entrySet()) {
+            ODataComplexType oDataComplexType = entry.getValue().getAnnotation(ODataComplexType.class);
+            String namespace = oDataComplexType.namespace().isEmpty() ? context.getNameSpace() : oDataComplexType.namespace();
+            String name = oDataComplexType.name().isEmpty() ? entry.getValue().getSimpleName() : oDataComplexType.name();
+            csdlComplexTypeList.add(getComplexType(ODataUtils.generateFQN(namespace, name)));
+        }
+
+        csdlSchema.setEntityTypes(csdlEntityTypeList.stream().sorted(Comparator.comparing(CsdlStructuralType::getName)).collect(Collectors.toList()));
+        csdlSchema.setEnumTypes(csdlEnumTypeList);
+        csdlSchema.setActions(csdlActionList);
+        csdlSchema.setFunctions(csdlFunctionList);
+        csdlSchema.setComplexTypes(csdlComplexTypeList);
+        csdlSchema.setEntityContainer(getEntityContainer());
+
+        return Collections.singletonList(csdlSchema);
     }
 }

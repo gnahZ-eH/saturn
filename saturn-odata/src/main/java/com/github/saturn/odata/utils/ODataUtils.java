@@ -358,6 +358,14 @@ public final class ODataUtils {
         return csdlAction;
     }
 
+    public static CsdlAction getAction(String namespace, String name, SaturnEdmContext context) {
+        return getAction(generateFQN(namespace, name), context);
+    }
+
+    public static CsdlFunction getFunction(String namespace, String name, SaturnEdmContext context) {
+        return getFunction(generateFQN(namespace, name), context);
+    }
+
     public static EdmPrimitiveTypeKind getEdmPrimitiveType(String type) {
         EdmPrimitiveTypeKind edmPrimitiveTypeKind;
         edmPrimitiveTypeKind = PrimitiveType.EDM_PT_BY_NAME.get(type);
