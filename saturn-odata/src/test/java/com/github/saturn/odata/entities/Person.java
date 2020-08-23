@@ -24,11 +24,8 @@
 
 package com.github.saturn.odata.entities;
 
-import com.github.saturn.odata.annotations.ODataEntityType;
 import com.github.saturn.odata.annotations.ODataProperty;
-import com.github.saturn.odata.utils.Constant;
 
-@ODataEntityType(namespace = Constant.NAMESPACE, name = "Person", keys = "Id")
 public class Person {
 
     @ODataProperty(name = "Id")
