@@ -64,7 +64,6 @@ public final class ODataUtils {
             if (oDataProperty != null) {
                 Class<?> fieldType = field.getType();
                 boolean collectionType = false;
-                boolean cpxType = fieldType.getAnnotationsByType(ODataComplexType.class).length != 0;
                 String propertyName = oDataProperty.name().trim().isEmpty() ? field.getName() : oDataProperty.name();
                 FullQualifiedName propertyType = null;
 
@@ -73,7 +72,8 @@ public final class ODataUtils {
 
                     if (typeKind != null) {
                         propertyType = typeKind.getFullQualifiedName();
-                    } else if (fieldType.isAssignableFrom(Collection.class)) {
+
+                    } else if (Collection.class.isAssignableFrom(fieldType)) {
                         collectionType = true;
                         Type type = field.getGenericType();
 
@@ -84,33 +84,30 @@ public final class ODataUtils {
 
                             if (argTypeKind != null) {
                                 propertyType = argTypeKind.getFullQualifiedName();
-                            }
 
-                            if (argType.isAnnotationPresent(ODataComplexType.class)) {
+                            } else if (argType.isAnnotationPresent(ODataComplexType.class)) {
                                 ODataComplexType complexType = argType.getAnnotation(ODataComplexType.class);
                                 propertyType = generateFQN(
                                         generateCollectionType(complexType.namespace(), complexType.name()));
                             }
                         }
-                    } else if (cpxType) {
+                    } else if (fieldType.isAnnotationPresent(ODataComplexType.class)) {
                         ODataComplexType complexType = fieldType.getAnnotationsByType(ODataComplexType.class)[0];
                         String namespace = complexType.namespace().isEmpty() ? contextNamespace : complexType.namespace();
                         String name = complexType.name().isEmpty() ? fieldType.getSimpleName() : complexType.name();
                         propertyType = generateFQN(namespace, name);
-                    } else {
-                        ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
 
-                        if (oDataEnumType != null) {
-                            String namespace = oDataEnumType.namespace().isEmpty() ? contextNamespace : oDataEnumType.namespace();
-                            String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
-                            propertyType = generateFQN(namespace, name);
-                        }
+                    } else if (fieldType.isAnnotationPresent(ODataEnumType.class)) {
+                        ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
+                        String namespace = oDataEnumType.namespace().isEmpty() ? contextNamespace : oDataEnumType.namespace();
+                        String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
+                        propertyType = generateFQN(namespace, name);
                     }
                 } else {
                     propertyType = getEdmPrimitiveType(oDataProperty.type()).getFullQualifiedName();
                 }
 
-                LOG.debug("Load property: {}-{}", propertyName, propertyType);
+                LOG.debug("Read property: {} -> {}", propertyName, propertyType);
 
                 CsdlProperty csdlProperty = new CsdlProperty()
                         .setName(propertyName)
