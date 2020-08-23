@@ -373,16 +373,21 @@ public final class ODataUtils {
     }
 
     public static EdmPrimitiveTypeKind getEdmPrimitiveType(Class<?> type) {
-        if (type.isAssignableFrom(Integer.class)) {
+        if (type.isAssignableFrom(Integer.class) ||
+            type.isAssignableFrom(int.class)) {
             return EdmPrimitiveTypeKind.Int32;
-        } else if (type.isAssignableFrom(Long.class)) {
+        } else if (type.isAssignableFrom(Long.class) ||
+                   type.isAssignableFrom(long.class)) {
             return EdmPrimitiveTypeKind.Int64;
         } else if (type.isAssignableFrom(Float.class) ||
-                type.isAssignableFrom(Double.class)) {
+                   type.isAssignableFrom(float.class) ||
+                   type.isAssignableFrom(Double.class) ||
+                   type.isAssignableFrom(double.class)) {
             return EdmPrimitiveTypeKind.Double;
         } else if (type.isAssignableFrom(String.class)) {
             return EdmPrimitiveTypeKind.String;
-        } else if (type.isAssignableFrom(Boolean.class)) {
+        } else if (type.isAssignableFrom(Boolean.class) ||
+                   type.isAssignableFrom(boolean.class)) {
             return EdmPrimitiveTypeKind.Boolean;
         } else if (type.isAssignableFrom(LocalDate.class)) {
             return EdmPrimitiveTypeKind.Date;
