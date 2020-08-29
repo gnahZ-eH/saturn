@@ -172,7 +172,7 @@ public final class ODataUtils {
         return csdlNavigationProperties;
     }
 
-    public static List<CsdlNavigationPropertyBinding> getCsdlNavigationPropertyBindings(List<Field> fields) {
+    public static List<CsdlNavigationPropertyBinding> getCsdlNavigationPropertyBindings(List<Field> fields) throws SaturnODataException {
         List<CsdlNavigationPropertyBinding> csdlNavigationPropertyBindings = new ArrayList<>();
 
         for (Field field : fields) {
@@ -185,20 +185,24 @@ public final class ODataUtils {
                 if (propertyTypeName == null) {
                     Class<?> fieldType = field.getType();
 
-                    if (fieldType.isAssignableFrom(Collection.class)) {
+                    if (Collection.class.isAssignableFrom(fieldType)) {
                         Type type = field.getGenericType();
 
                         if (type instanceof ParameterizedType) {
                             ParameterizedType parameterizedType = (ParameterizedType) type;
                             Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
                             ODataEntitySet oDataEntitySet = argType.getAnnotation(ODataEntitySet.class);
-                            propertyTypeName = oDataEntitySet == null ? null : oDataEntitySet.name();
+                            ExceptionUtils.assertNotNull(oDataEntitySet, field);
+                            propertyTypeName = oDataEntitySet.name();
                         }
                     } else {
                         ODataEntitySet oDataEntitySet = fieldType.getAnnotation(ODataEntitySet.class);
-                        propertyTypeName = oDataEntitySet == null ? null : oDataEntitySet.name();
+                        ExceptionUtils.assertNotNull(oDataEntitySet, field);
+                        propertyTypeName = oDataEntitySet.name();
                     }
                 }
+
+                LOG.debug("Read NavigationPropertyBinding: {} -> {}", propertyName, propertyTypeName);
 
                 CsdlNavigationPropertyBinding csdlNavigationPropertyBinding = new CsdlNavigationPropertyBinding()
                         .setPath(propertyName)

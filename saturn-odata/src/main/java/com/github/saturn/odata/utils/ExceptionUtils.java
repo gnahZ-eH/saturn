@@ -24,6 +24,7 @@
 
 package com.github.saturn.odata.utils;
 
+import com.github.saturn.odata.annotations.ODataEntitySet;
 import com.github.saturn.odata.annotations.ODataEntityType;
 import com.github.saturn.odata.exceptions.SaturnODataException;
 
@@ -36,6 +37,12 @@ public class ExceptionUtils {
     public static void assertNotNull(ODataEntityType oDataEntityType, Field field) throws SaturnODataException {
         if (oDataEntityType == null) {
             throw new SaturnODataException("Can't get the EntityType from the field with ODataNavigationProperty: " + field);
+        }
+    }
+
+    public static void assertNotNull(ODataEntitySet oDataEntitySet, Field field) throws SaturnODataException {
+        if (oDataEntitySet == null) {
+            throw new SaturnODataException("Can't get the EntitySet from the field with ODataNavigationProperty: " + field);
         }
     }
 }

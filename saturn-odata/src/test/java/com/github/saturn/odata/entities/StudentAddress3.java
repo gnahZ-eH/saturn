@@ -24,11 +24,13 @@
 
 package com.github.saturn.odata.entities;
 
+import com.github.saturn.odata.annotations.ODataEntitySet;
 import com.github.saturn.odata.annotations.ODataEntityType;
 import com.github.saturn.odata.annotations.ODataProperty;
 import com.github.saturn.odata.utils.Constant;
 
 @ODataEntityType(name = "StudentAddress3", namespace = Constant.NAMESPACE)
+@ODataEntitySet(name = "StudentAddress3s")
 public class StudentAddress3 {
 
     @ODataProperty(name = "Name")
