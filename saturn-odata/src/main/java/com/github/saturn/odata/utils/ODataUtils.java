@@ -25,6 +25,7 @@
 package com.github.saturn.odata.utils;
 
 import com.github.saturn.odata.annotations.*;
+import com.github.saturn.odata.exceptions.SaturnODataException;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.enums.PrimitiveType;
 
@@ -107,7 +108,7 @@ public final class ODataUtils {
                     propertyType = getEdmPrimitiveType(oDataProperty.type()).getFullQualifiedName();
                 }
 
-                LOG.debug("Read property: {} -> {}", propertyName, propertyType);
+                LOG.debug("Read Property: {} -> {}", propertyName, propertyType);
 
                 CsdlProperty csdlProperty = new CsdlProperty()
                         .setName(propertyName)
@@ -121,7 +122,7 @@ public final class ODataUtils {
         return csdlProperties;
     }
 
-    public static List<CsdlNavigationProperty> getCsdlNavigationProperties(List<Field> fields, String contextNamespace) {
+    public static List<CsdlNavigationProperty> getCsdlNavigationProperties(List<Field> fields, String contextNamespace) throws SaturnODataException {
         List<CsdlNavigationProperty> csdlNavigationProperties = new ArrayList<>();
 
         for (Field field : fields) {
@@ -135,7 +136,7 @@ public final class ODataUtils {
                 if (propertyTypeName == null) {
                     Class<?> fieldType = field.getType();
 
-                    if (fieldType.isAssignableFrom(Collection.class)) {
+                    if (Collection.class.isAssignableFrom(fieldType)) {
                         collectionType = true;
                         Type type = field.getGenericType();
 
@@ -143,13 +144,17 @@ public final class ODataUtils {
                             ParameterizedType parameterizedType = (ParameterizedType) type;
                             Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
                             ODataEntityType oDataEntityType = argType.getAnnotation(ODataEntityType.class);
-                            propertyTypeName = oDataEntityType == null ? null : oDataEntityType.name();
+                            ExceptionUtils.assertNotNull(oDataEntityType, field);
+                            propertyTypeName = oDataEntityType.name();
                         }
                     } else {
                         ODataEntityType oDataEntityType = fieldType.getAnnotation(ODataEntityType.class);
-                        propertyTypeName = oDataEntityType == null ? null : oDataEntityType.name();
+                        ExceptionUtils.assertNotNull(oDataEntityType, field);
+                        propertyTypeName = oDataEntityType.name();
                     }
                 }
+
+                LOG.debug("Read NavigationProperty: {} -> {}", propertyName, propertyTypeName);
 
                 CsdlNavigationProperty csdlNavigationProperty = new CsdlNavigationProperty()
                         .setName(propertyName)

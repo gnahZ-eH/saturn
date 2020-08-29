@@ -25,7 +25,13 @@
 package com.github.saturn.odata.utils;
 
 import com.github.saturn.odata.entities.Student;
+import com.github.saturn.odata.entities.Student2;
+import com.github.saturn.odata.entities.Student3;
+import com.github.saturn.odata.exceptions.SaturnODataException;
+
+import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
+import org.apache.olingo.commons.api.ex.ODataException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -39,6 +45,22 @@ class ODataUtilsTest {
     void getCsdlPropertiesTest() {
         List<Field> fields = ClassUtils.getFields(Student.class);
         List<CsdlProperty> csdlProperties = ODataUtils.getCsdlProperties(fields, Constant.NAMESPACE);
-        assertEquals(11, csdlProperties.size());
+        assertNotNull(csdlProperties);
+    }
+
+    @Test
+    void getCsdlNavigationPropertiesTest() throws ODataException {
+        List<Field> fields = ClassUtils.getFields(Student2.class);
+        List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, Constant.NAMESPACE);
+        assertNotNull(csdlNavigationProperties);
+    }
+
+    @Test
+    void getCsdlNavigationPropertiesTest2() throws ODataException {
+        List<Field> fields = ClassUtils.getFields(Student3.class);
+        Throwable exception = assertThrows(SaturnODataException.class, () -> {
+            List<CsdlNavigationProperty> csdlNavigationProperties = ODataUtils.getCsdlNavigationProperties(fields, Constant.NAMESPACE);
+        });
+        assertNotNull(exception);
     }
 }
