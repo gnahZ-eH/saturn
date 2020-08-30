@@ -27,12 +27,17 @@ package com.github.saturn.odata.utils;
 import com.github.saturn.odata.entities.Student;
 import com.github.saturn.odata.entities.Student2;
 import com.github.saturn.odata.entities.Student3;
+import com.github.saturn.odata.entities.functions.GetName;
 import com.github.saturn.odata.exceptions.SaturnODataException;
 
+import com.github.saturn.odata.metadata.SaturnEdmContext;
+import org.apache.olingo.commons.api.edm.FullQualifiedName;
+import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlNavigationPropertyBinding;
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.ex.ODataException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -41,6 +46,15 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ODataUtilsTest {
+
+    private static final SaturnEdmContext context = new SaturnEdmContext();
+
+    @BeforeAll
+    static void init() {
+        context.setNameSpace(Constant.NAMESPACE);
+        context.getFunctions().put("GetNameF", GetName.class);
+        context.getEntitySets().put("Students", Student.class);
+    }
 
     @Test
     void getCsdlPropertiesTest() {
@@ -79,5 +93,17 @@ class ODataUtilsTest {
             List<CsdlNavigationPropertyBinding> csdlNavigationPropertyBindings = ODataUtils.getCsdlNavigationPropertyBindings(fields);
         });
         assertNotNull(exception);
+    }
+
+    @Test
+    void getFunctionTest() {
+        FullQualifiedName fullQualifiedName = new FullQualifiedName(Constant.NAMESPACE + ".functions", "GetNameF");
+        FullQualifiedName fullQualifiedName2 = new FullQualifiedName(Constant.NAMESPACE + ".functions", "GetNameF2");
+
+        CsdlFunction csdlFunction = ODataUtils.getFunction(fullQualifiedName, context);
+        CsdlFunction csdlFunction2 = ODataUtils.getFunction(fullQualifiedName2, context);
+
+        assertNotNull(csdlFunction);
+        assertNull(csdlFunction2);
     }
 }

@@ -254,9 +254,9 @@ public final class ODataUtils {
                     if (typeKind != null) {
                         oDataParameterType = typeKind.getFullQualifiedName();
                     } else {
-                        ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
 
-                        if (oDataEnumType != null) {
+                        if (fieldType.isAnnotationPresent(ODataEnumType.class)) {
+                            ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
                             String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
                             String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
                             oDataParameterType = generateFQN(namespace, name);
@@ -268,7 +268,7 @@ public final class ODataUtils {
                     if (typeKind != null) {
                         oDataParameterType = typeKind.getFullQualifiedName();
                     } else {
-                        oDataParameterType = generateFQN(oDataParameter.type());
+                        oDataParameterType = generateFQN(context.getNameSpace(), oDataParameter.type());
                     }
                 }
 
