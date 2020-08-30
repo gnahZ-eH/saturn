@@ -24,6 +24,7 @@
 
 package com.github.saturn.odata.entities;
 
+import com.github.saturn.odata.annotations.ODataEntitySet;
 import com.github.saturn.odata.annotations.ODataEntityType;
 import com.github.saturn.odata.annotations.ODataProperty;
 import com.github.saturn.odata.entities.enums.Sex;
@@ -33,6 +34,7 @@ import com.github.saturn.odata.utils.Constant;
 import java.util.List;
 
 @ODataEntityType(namespace = Constant.NAMESPACE, name = "Student", keys = "Id")
+@ODataEntitySet(name = "Students")
 public class Student {
 
     @ODataProperty(name = "Id")

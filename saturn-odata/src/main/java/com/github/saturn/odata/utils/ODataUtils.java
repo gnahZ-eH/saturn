@@ -25,6 +25,7 @@
 package com.github.saturn.odata.utils;
 
 import com.github.saturn.odata.annotations.*;
+import com.github.saturn.odata.exceptions.SaturnODataException;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.enums.PrimitiveType;
 
@@ -107,7 +108,7 @@ public final class ODataUtils {
                     propertyType = getEdmPrimitiveType(oDataProperty.type()).getFullQualifiedName();
                 }
 
-                LOG.debug("Read property: {} -> {}", propertyName, propertyType);
+                LOG.debug("Read Property: {} -> {}", propertyName, propertyType);
 
                 CsdlProperty csdlProperty = new CsdlProperty()
                         .setName(propertyName)
@@ -121,7 +122,7 @@ public final class ODataUtils {
         return csdlProperties;
     }
 
-    public static List<CsdlNavigationProperty> getCsdlNavigationProperties(List<Field> fields, String contextNamespace) {
+    public static List<CsdlNavigationProperty> getCsdlNavigationProperties(List<Field> fields, String contextNamespace) throws SaturnODataException {
         List<CsdlNavigationProperty> csdlNavigationProperties = new ArrayList<>();
 
         for (Field field : fields) {
@@ -135,7 +136,7 @@ public final class ODataUtils {
                 if (propertyTypeName == null) {
                     Class<?> fieldType = field.getType();
 
-                    if (fieldType.isAssignableFrom(Collection.class)) {
+                    if (Collection.class.isAssignableFrom(fieldType)) {
                         collectionType = true;
                         Type type = field.getGenericType();
 
@@ -143,13 +144,17 @@ public final class ODataUtils {
                             ParameterizedType parameterizedType = (ParameterizedType) type;
                             Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
                             ODataEntityType oDataEntityType = argType.getAnnotation(ODataEntityType.class);
-                            propertyTypeName = oDataEntityType == null ? null : oDataEntityType.name();
+                            ExceptionUtils.assertNotNull(oDataEntityType, field);
+                            propertyTypeName = oDataEntityType.name();
                         }
                     } else {
                         ODataEntityType oDataEntityType = fieldType.getAnnotation(ODataEntityType.class);
-                        propertyTypeName = oDataEntityType == null ? null : oDataEntityType.name();
+                        ExceptionUtils.assertNotNull(oDataEntityType, field);
+                        propertyTypeName = oDataEntityType.name();
                     }
                 }
+
+                LOG.debug("Read NavigationProperty: {} -> {}", propertyName, propertyTypeName);
 
                 CsdlNavigationProperty csdlNavigationProperty = new CsdlNavigationProperty()
                         .setName(propertyName)
@@ -167,7 +172,7 @@ public final class ODataUtils {
         return csdlNavigationProperties;
     }
 
-    public static List<CsdlNavigationPropertyBinding> getCsdlNavigationPropertyBindings(List<Field> fields) {
+    public static List<CsdlNavigationPropertyBinding> getCsdlNavigationPropertyBindings(List<Field> fields) throws SaturnODataException {
         List<CsdlNavigationPropertyBinding> csdlNavigationPropertyBindings = new ArrayList<>();
 
         for (Field field : fields) {
@@ -180,20 +185,24 @@ public final class ODataUtils {
                 if (propertyTypeName == null) {
                     Class<?> fieldType = field.getType();
 
-                    if (fieldType.isAssignableFrom(Collection.class)) {
+                    if (Collection.class.isAssignableFrom(fieldType)) {
                         Type type = field.getGenericType();
 
                         if (type instanceof ParameterizedType) {
                             ParameterizedType parameterizedType = (ParameterizedType) type;
                             Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
                             ODataEntitySet oDataEntitySet = argType.getAnnotation(ODataEntitySet.class);
-                            propertyTypeName = oDataEntitySet == null ? null : oDataEntitySet.name();
+                            ExceptionUtils.assertNotNull(oDataEntitySet, field);
+                            propertyTypeName = oDataEntitySet.name();
                         }
                     } else {
                         ODataEntitySet oDataEntitySet = fieldType.getAnnotation(ODataEntitySet.class);
-                        propertyTypeName = oDataEntitySet == null ? null : oDataEntitySet.name();
+                        ExceptionUtils.assertNotNull(oDataEntitySet, field);
+                        propertyTypeName = oDataEntitySet.name();
                     }
                 }
+
+                LOG.debug("Read NavigationPropertyBinding: {} -> {}", propertyName, propertyTypeName);
 
                 CsdlNavigationPropertyBinding csdlNavigationPropertyBinding = new CsdlNavigationPropertyBinding()
                         .setPath(propertyName)
@@ -245,9 +254,9 @@ public final class ODataUtils {
                     if (typeKind != null) {
                         oDataParameterType = typeKind.getFullQualifiedName();
                     } else {
-                        ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
 
-                        if (oDataEnumType != null) {
+                        if (fieldType.isAnnotationPresent(ODataEnumType.class)) {
+                            ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
                             String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
                             String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
                             oDataParameterType = generateFQN(namespace, name);
@@ -259,7 +268,7 @@ public final class ODataUtils {
                     if (typeKind != null) {
                         oDataParameterType = typeKind.getFullQualifiedName();
                     } else {
-                        oDataParameterType = generateFQN(oDataParameter.type());
+                        oDataParameterType = generateFQN(context.getNameSpace(), oDataParameter.type());
                     }
                 }
 
