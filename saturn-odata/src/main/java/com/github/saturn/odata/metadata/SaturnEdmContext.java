@@ -25,16 +25,15 @@
 package com.github.saturn.odata.metadata;
 
 import com.github.saturn.odata.annotations.*;
+import com.github.saturn.odata.utils.ClassUtils;
 
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
 import java.util.*;
 
 public class SaturnEdmContext {
@@ -56,7 +55,7 @@ public class SaturnEdmContext {
     private Map<String, Class<?>> entityTypes     = new HashMap<>();
 
     public SaturnEdmContext initialize() throws ODataApplicationException {
-        ClassPathScanningCandidateComponentProvider provider = createComponentScanner(Arrays.asList(
+        ClassPathScanningCandidateComponentProvider provider = ClassUtils.createComponentScanner(Arrays.asList(
                 ODataAction.class,
                 ODataActionImport.class,
                 ODataComplexType.class,
@@ -133,15 +132,6 @@ public class SaturnEdmContext {
             }
         }
         return this;
-    }
-
-    private ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {
-        ClassPathScanningCandidateComponentProvider provider =
-                new ClassPathScanningCandidateComponentProvider(false);
-        for (Class<? extends Annotation> annotation : annotations) {
-            provider.addIncludeFilter(new AnnotationTypeFilter(annotation));
-        }
-        return provider;
     }
 
     public String getNameSpace() {

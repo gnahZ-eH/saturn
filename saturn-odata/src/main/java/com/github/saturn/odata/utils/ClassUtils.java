@@ -24,6 +24,10 @@
 
 package com.github.saturn.odata.utils;
 
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,5 +50,14 @@ public final class ClassUtils {
             }
         }
         return fields;
+    }
+
+    public static ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {
+        ClassPathScanningCandidateComponentProvider provider =
+                new ClassPathScanningCandidateComponentProvider(false);
+        for (Class<? extends Annotation> annotation : annotations) {
+            provider.addIncludeFilter(new AnnotationTypeFilter(annotation));
+        }
+        return provider;
     }
 }
