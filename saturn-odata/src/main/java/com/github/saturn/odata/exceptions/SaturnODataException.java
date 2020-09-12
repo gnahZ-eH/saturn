@@ -25,11 +25,23 @@
 package com.github.saturn.odata.exceptions;
 
 import org.apache.olingo.commons.api.ex.ODataException;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
 
 public class SaturnODataException extends ODataException {
 
+    private int statusCode;
+
     public SaturnODataException(final String exceptionMessage, final Throwable cause) {
         super(exceptionMessage, cause);
+    }
+
+    public SaturnODataException(final String format, final Object... args) {
+        super(String.format(format, args));
+    }
+
+    public SaturnODataException(final HttpStatusCode httpStatus, final String format, final Object... args) {
+        super(String.format(format, args));
+        this.statusCode = httpStatus.getStatusCode();
     }
 
     public SaturnODataException(final String exceptionMessage) {
@@ -38,5 +50,14 @@ public class SaturnODataException extends ODataException {
 
     public SaturnODataException(final Throwable cause) {
         super(cause);
+    }
+
+    public SaturnODataException(final String exceptionMessage, final HttpStatusCode httpStatus) {
+        super(exceptionMessage);
+        this.statusCode = httpStatus.getStatusCode();
+    }
+
+    public int getStatusCode() {
+        return this.statusCode;
     }
 }

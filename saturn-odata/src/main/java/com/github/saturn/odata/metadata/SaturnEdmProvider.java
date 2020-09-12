@@ -96,7 +96,7 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
             String csdlPropertyRefName = csdlPropertyRef.getName();
             boolean valid = csdlProperties.stream().anyMatch(c -> c.getName().equals(csdlPropertyRefName));
             if (!valid) {
-                throw new SaturnODataException(String.format("The key %s does not exist in entity %s", csdlPropertyRefName, entityTypeName));
+                throw new SaturnODataException("The key %s does not exist in entity %s", csdlPropertyRefName, entityTypeName);
             }
         }
 
@@ -205,7 +205,7 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
             }
             return csdlEnumType;
         }
-        throw new SaturnODataException(String.format("%s is not an enum type", enumTypeName.getName()));
+        throw new SaturnODataException("%s is not an enum type", enumTypeName.getName());
     }
 
     @Override

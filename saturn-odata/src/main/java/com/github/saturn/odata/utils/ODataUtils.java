@@ -418,6 +418,14 @@ public final class ODataUtils {
         return null;
     }
 
+    public static PrimitiveType getPrimitiveType(final Class<?> type) {
+        EdmPrimitiveTypeKind edmPrimitiveTypeKind = getEdmPrimitiveType(type);
+        if (edmPrimitiveTypeKind != null) {
+            return PrimitiveType.PT_BY_EDM_PT.get(edmPrimitiveTypeKind);
+        }
+        return null;
+    }
+
     public static FullQualifiedName getFullQualifiedNameFromClassType(final Class<?> clazz, final String contextNamespace) {
         FullQualifiedName fullQualifiedName = null;
 
