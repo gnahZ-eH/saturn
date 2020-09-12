@@ -27,7 +27,13 @@ package com.github.saturn.odata.metadata;
 import com.github.saturn.odata.exceptions.SaturnODataException;
 import com.github.saturn.odata.utils.ClassUtils;
 import com.github.saturn.odata.utils.ODataUtils;
-import com.github.saturn.odata.annotations.*;
+import com.github.saturn.odata.annotations.ODataEntityType;
+import com.github.saturn.odata.annotations.ODataFunction;
+import com.github.saturn.odata.annotations.ODataEnumType;
+import com.github.saturn.odata.annotations.ODataComplexType;
+import com.github.saturn.odata.annotations.ODataAction;
+import com.github.saturn.odata.annotations.ODataActionImport;
+import com.github.saturn.odata.annotations.ODataFunctionImport;
 
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
@@ -74,9 +80,11 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public CsdlEntityType getEntityType(FullQualifiedName entityTypeName) throws ODataException {
+    public CsdlEntityType getEntityType(final FullQualifiedName entityTypeName) throws ODataException {
         Class<?> clazz = context.getEntityTypes().get(entityTypeName.getName());
-        if (clazz == null) return null;
+        if (clazz == null) {
+            return null;
+        }
 
         ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
         List<Field> fields = ClassUtils.getFields(clazz);
@@ -100,9 +108,11 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public CsdlEntitySet getEntitySet(FullQualifiedName entityContainer, String entitySetName) throws ODataException {
+    public CsdlEntitySet getEntitySet(final FullQualifiedName entityContainer, final String entitySetName) throws ODataException {
         Class<?> clazz = context.getEntitySets().get(entitySetName);
-        if (clazz == null) return null;
+        if (clazz == null) {
+            return null;
+        }
 
         ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
         List<Field> fields = ClassUtils.getFields(clazz);
@@ -115,9 +125,11 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public CsdlComplexType getComplexType(FullQualifiedName complexTypeName) throws ODataException {
+    public CsdlComplexType getComplexType(final FullQualifiedName complexTypeName) throws ODataException {
         Class<?> clazz = context.getComplexTypes().get(complexTypeName.getName());
-        if (clazz == null) return null;
+        if (clazz == null) {
+            return null;
+        }
 
         ODataComplexType oDataComplexType = clazz.getAnnotation(ODataComplexType.class);
         List<Field> fields = ClassUtils.getFields(clazz);
@@ -132,9 +144,11 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public CsdlActionImport getActionImport(FullQualifiedName entityContainer, String actionImportName) throws ODataException {
+    public CsdlActionImport getActionImport(final FullQualifiedName entityContainer, final String actionImportName) throws ODataException {
         Class<?> clazz = context.getActionImports().get(actionImportName);
-        if (clazz == null) return null;
+        if (clazz == null) {
+            return null;
+        }
         ODataActionImport oDataActionImport = clazz.getAnnotation(ODataActionImport.class);
 
         return new CsdlActionImport()
@@ -144,9 +158,11 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public CsdlFunctionImport getFunctionImport(FullQualifiedName entityContainer, String functionImportName) throws ODataException {
+    public CsdlFunctionImport getFunctionImport(final FullQualifiedName entityContainer, final String functionImportName) throws ODataException {
         Class<?> clazz = context.getFunctionImports().get(functionImportName);
-        if (clazz == null) return null;
+        if (clazz == null) {
+            return null;
+        }
         ODataFunctionImport oDataFunctionImport = clazz.getAnnotation(ODataFunctionImport.class);
 
         CsdlFunctionImport csdlFunctionImport = new CsdlFunctionImport()
@@ -161,9 +177,11 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public CsdlEnumType getEnumType(FullQualifiedName enumTypeName) throws ODataException {
+    public CsdlEnumType getEnumType(final FullQualifiedName enumTypeName) throws ODataException {
         Class<?> clazz = context.getEnums().get(enumTypeName.getName());
-        if (clazz == null) return null;
+        if (clazz == null) {
+            return null;
+        }
 
         if (clazz.isEnum()) {
             ODataEnumType oDataEnumType = clazz.getAnnotation(ODataEnumType.class);
@@ -191,13 +209,13 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public List<CsdlFunction> getFunctions(FullQualifiedName functionName) throws ODataException {
+    public List<CsdlFunction> getFunctions(final FullQualifiedName functionName) throws ODataException {
         CsdlFunction csdlFunction = ODataUtils.getFunction(functionName, context);
         return csdlFunction == null ? null : Collections.singletonList(csdlFunction);
     }
 
     @Override
-    public List<CsdlAction> getActions(FullQualifiedName actionName) throws ODataException {
+    public List<CsdlAction> getActions(final FullQualifiedName actionName) throws ODataException {
         CsdlAction csdlAction = ODataUtils.getAction(actionName, context);
         return csdlAction == null ? null : Collections.singletonList(csdlAction);
     }
@@ -290,7 +308,7 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
     }
 
     @Override
-    public CsdlEntityContainerInfo getEntityContainerInfo(FullQualifiedName entityContainerName) throws ODataException {
+    public CsdlEntityContainerInfo getEntityContainerInfo(final FullQualifiedName entityContainerName) throws ODataException {
         FullQualifiedName container = ODataUtils.generateFQN(context.getNameSpace(), context.getContainerName());
         if (ODataUtils.isNull(entityContainerName) || entityContainerName.equals(container)) {
             return new CsdlEntityContainerInfo().setContainerName(container);

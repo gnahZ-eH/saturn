@@ -28,15 +28,15 @@ import org.apache.olingo.commons.api.ex.ODataException;
 
 public class SaturnODataException extends ODataException {
 
-    public SaturnODataException(String exceptionMessage, Throwable cause) {
+    public SaturnODataException(final String exceptionMessage, final Throwable cause) {
         super(exceptionMessage, cause);
     }
 
-    public SaturnODataException(String exceptionMessage) {
+    public SaturnODataException(final String exceptionMessage) {
         super(exceptionMessage);
     }
 
-    public SaturnODataException(Throwable cause) {
+    public SaturnODataException(final Throwable cause) {
         super(cause);
     }
 }

@@ -24,7 +24,14 @@
 
 package com.github.saturn.odata.metadata;
 
-import com.github.saturn.odata.annotations.*;
+import com.github.saturn.odata.annotations.ODataEntityType;
+import com.github.saturn.odata.annotations.ODataEntitySet;
+import com.github.saturn.odata.annotations.ODataFunction;
+import com.github.saturn.odata.annotations.ODataEnumType;
+import com.github.saturn.odata.annotations.ODataComplexType;
+import com.github.saturn.odata.annotations.ODataAction;
+import com.github.saturn.odata.annotations.ODataActionImport;
+import com.github.saturn.odata.annotations.ODataFunctionImport;
 import com.github.saturn.odata.utils.ClassUtils;
 
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -34,7 +41,11 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.Locale;
 
 public class SaturnEdmContext {
 
@@ -138,32 +149,32 @@ public class SaturnEdmContext {
         return NAME_SPACE;
     }
 
-    public void setNameSpace(String NAME_SPACE) {
-        this.NAME_SPACE = NAME_SPACE;
+    public void setNameSpace(final String nameSpace) {
+        this.NAME_SPACE = nameSpace;
     }
 
     public String getDefaultEdmPkg() {
         return DEFAULT_EDM_PKG;
     }
 
-    public void setDefaultEdmPkg(String DEFAULT_EDM_PKG) {
-        this.DEFAULT_EDM_PKG = DEFAULT_EDM_PKG;
+    public void setDefaultEdmPkg(final String defaultEdmPkg) {
+        this.DEFAULT_EDM_PKG = defaultEdmPkg;
     }
 
     public String getContainerName() {
         return CONTAINER_NAME;
     }
 
-    public void setContainerName(String CONTAINER_NAME) {
-        this.CONTAINER_NAME = CONTAINER_NAME;
+    public void setContainerName(final String containerName) {
+        this.CONTAINER_NAME = containerName;
     }
 
     public String getServiceRoot() {
         return SERVICE_ROOT;
     }
 
-    public void setServiceRoot(String SERVICE_ROOT) {
-        this.SERVICE_ROOT = SERVICE_ROOT;
+    public void setServiceRoot(final String serviceRoot) {
+        this.SERVICE_ROOT = serviceRoot;
     }
 
     public Map<String, Class<?>> getEntitySets() {

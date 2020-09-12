@@ -30,17 +30,17 @@ import com.github.saturn.odata.exceptions.SaturnODataException;
 
 import java.lang.reflect.Field;
 
-public class ExceptionUtils {
+public final class ExceptionUtils {
 
     private ExceptionUtils() { }
 
-    public static void assertNotNull(ODataEntityType oDataEntityType, Field field) throws SaturnODataException {
+    public static void assertNotNull(final ODataEntityType oDataEntityType, final Field field) throws SaturnODataException {
         if (oDataEntityType == null) {
             throw new SaturnODataException("Can't get the EntityType from the field with ODataNavigationProperty: " + field);
         }
     }
 
-    public static void assertNotNull(ODataEntitySet oDataEntitySet, Field field) throws SaturnODataException {
+    public static void assertNotNull(final ODataEntitySet oDataEntitySet, final Field field) throws SaturnODataException {
         if (oDataEntitySet == null) {
             throw new SaturnODataException("Can't get the EntitySet from the field with ODataNavigationProperty: " + field);
         }

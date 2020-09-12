@@ -37,11 +37,11 @@ public final class ClassUtils {
 
     private ClassUtils() { }
 
-    public static List<Field> getFields(Class<?> clazz) {
+    public static List<Field> getFields(final Class<?> clazz) {
         return getFields(clazz, true);
     }
 
-    public static List<Field> getFields(Class<?> clazz, boolean superClass) {
+    public static List<Field> getFields(final Class<?> clazz, final boolean superClass) {
         List<Field> fields = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         if (superClass) {
             Class<?> superClazz = clazz.getSuperclass();
@@ -52,7 +52,7 @@ public final class ClassUtils {
         return fields;
     }
 
-    public static ClassPathScanningCandidateComponentProvider createComponentScanner(Iterable<Class<? extends Annotation>> annotations) {
+    public static ClassPathScanningCandidateComponentProvider createComponentScanner(final Iterable<Class<? extends Annotation>> annotations) {
         ClassPathScanningCandidateComponentProvider provider =
                 new ClassPathScanningCandidateComponentProvider(false);
         for (Class<? extends Annotation> annotation : annotations) {

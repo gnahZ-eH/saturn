@@ -44,7 +44,7 @@ public enum PrimitiveType {
     EDM_DATE_TIME ("Edm.DateTimeOffset");
 
     private final String type;
-    public final static Map<String, EdmPrimitiveTypeKind> EDM_PT_BY_NAME = new HashMap<>();
+    public static final Map<String, EdmPrimitiveTypeKind> EDM_PT_BY_NAME = new HashMap<>();
 
     static {
         EDM_PT_BY_NAME.put(EDM_BYTE.type,      EdmPrimitiveTypeKind.Byte);
@@ -60,8 +60,8 @@ public enum PrimitiveType {
         EDM_PT_BY_NAME.put(EDM_DATE_TIME.type, EdmPrimitiveTypeKind.DateTimeOffset);
     }
 
-    PrimitiveType(final String type) {
-        this.type = type;
+    PrimitiveType(final String t) {
+        this.type = t;
     }
 
     public String getType() {
