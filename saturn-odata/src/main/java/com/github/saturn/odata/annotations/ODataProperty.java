@@ -31,6 +31,11 @@ import java.lang.annotation.Target;
 
 /**
  * The edm:Property element defines a structural property.
+ * A structural property is a property (of a structural type) that has one of the following types:
+ *     * Primitive type
+ *     * Complex type
+ *     * Enumeration type
+ *     * A collection of one of the above
  *
  * For more details:
  * http://docs.oasis-open.org/odata/odata/v4.0/os/part3-csdl/odata-v4.0-os-part3-csdl.html#_Toc372793906

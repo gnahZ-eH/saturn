@@ -44,7 +44,8 @@ public enum PrimitiveType {
     EDM_DATE_TIME ("Edm.DateTimeOffset");
 
     private final String type;
-    public final static Map<String, EdmPrimitiveTypeKind> EDM_PT_BY_NAME = new HashMap<>();
+    public static final Map<String, EdmPrimitiveTypeKind> EDM_PT_BY_NAME = new HashMap<>();
+    public static final Map<EdmPrimitiveTypeKind, PrimitiveType> PT_BY_EDM_PT = new HashMap<>();
 
     static {
         EDM_PT_BY_NAME.put(EDM_BYTE.type,      EdmPrimitiveTypeKind.Byte);
@@ -58,10 +59,22 @@ public enum PrimitiveType {
         EDM_PT_BY_NAME.put(EDM_DOUBLE.type,    EdmPrimitiveTypeKind.Double);
         EDM_PT_BY_NAME.put(EDM_BOOLEAN.type,   EdmPrimitiveTypeKind.Boolean);
         EDM_PT_BY_NAME.put(EDM_DATE_TIME.type, EdmPrimitiveTypeKind.DateTimeOffset);
+
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Byte,           EDM_BYTE);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.SByte,          EDM_SBYTE);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Int16,          EDM_INT16);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Int32,          EDM_INT32);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Int64,          EDM_INT64);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.String,         EDM_STRING);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Date,           EDM_DATE);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Decimal,        EDM_DECIMAL);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Double,         EDM_DOUBLE);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.Boolean,        EDM_BOOLEAN);
+        PT_BY_EDM_PT.put(EdmPrimitiveTypeKind.DateTimeOffset, EDM_DATE_TIME);
     }
 
-    PrimitiveType(final String type) {
-        this.type = type;
+    PrimitiveType(final String t) {
+        this.type = t;
     }
 
     public String getType() {

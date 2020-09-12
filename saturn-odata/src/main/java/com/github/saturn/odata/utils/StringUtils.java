@@ -32,14 +32,20 @@ public final class StringUtils {
 
     public static final String COLLECTION = "Collection";
 
+    public static final String COLLECTION_QUALIFIED_FULL_NAME = "Collection(%s)";
 
-    public static boolean equals(String s1, String s2) {
-        if (s1 == null && s2 == null) return true;
-        if (s1 == null || s2 == null) return false;
+
+    public static boolean equals(final String s1, final String s2) {
+        if (s1 == null && s2 == null) {
+            return true;
+        }
+        if (s1 == null || s2 == null) {
+            return false;
+        }
         return s1.equals(s2);
     }
 
-    public static boolean isNotNull(String s) {
+    public static boolean isNotNull(final String s) {
         return s != null;
     }
 }
