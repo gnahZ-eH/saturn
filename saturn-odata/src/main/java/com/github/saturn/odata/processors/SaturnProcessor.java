@@ -29,6 +29,7 @@ import com.github.saturn.odata.annotations.ODataEntitySet;
 import com.github.saturn.odata.annotations.ODataEnumType;
 import com.github.saturn.odata.annotations.ODataComplexType;
 import com.github.saturn.odata.annotations.ODataProperty;
+import com.github.saturn.odata.annotations.ODataNavigationProperty;
 import com.github.saturn.odata.enums.PrimitiveType;
 import com.github.saturn.odata.exceptions.SaturnODataException;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
@@ -41,11 +42,14 @@ import org.apache.olingo.commons.api.data.ComplexValue;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
+import org.apache.olingo.commons.api.data.Link;
+import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.processor.Processor;
+import org.apache.olingo.server.api.uri.UriResourceKind;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +62,8 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Optional;
+import java.util.ArrayList;
 
 public class SaturnProcessor implements Processor {
 
@@ -115,14 +121,19 @@ public class SaturnProcessor implements Processor {
                     HttpStatusCode.INTERNAL_SERVER_ERROR, "Class %s with annotation @ODataEntitySet should have name field.", clazz);
         }
 
-        String entityName = oDataEntityType.name() != null ? oDataEntityType.name() : oDataComplexType.name();
+        String entityName = oDataEntityType != null ? oDataEntityType.name() : oDataComplexType.name();
         List<Field> fields = ClassUtils.getFields(clazz);
         LOG.debug("{} fields loaded in class {}", fields.size(), clazz);
 
         for (Field field : fields) {
+            LOG.debug("Start processing {} field of type {}.", field.getName(), field.getType());
 
             if (field.isAnnotationPresent(ODataProperty.class)) {
                 Property property = generateEntityProperty(field, object, expandOption);
+                entity.addProperty(property);
+
+            } else if (field.isAnnotationPresent(ODataNavigationProperty.class)) {
+                Link link = generateEntityLink(field, object, expandOption);
             }
         }
         return null;
@@ -133,7 +144,7 @@ public class SaturnProcessor implements Processor {
         field.setAccessible(true);
         Object actualValue = field.get(object);
         ODataProperty oDataProperty = field.getAnnotation(ODataProperty.class);
-        String propertyName = oDataProperty.name().isEmpty() ? field.getName() : oDataProperty.name();
+        String propertyName = oDataProperty.name().trim().isEmpty() ? field.getName() : oDataProperty.name();
 
         LOG.debug("Load property {} for edm entity {} from field {} of class {} with value: {}",
                 propertyName, object.getClass(), field.getName(), field.getDeclaringClass(), actualValue);
@@ -216,6 +227,79 @@ public class SaturnProcessor implements Processor {
             valueType = ValueType.COMPLEX;
         }
         return new Property(type, propertyName, valueType, actualValue);
+    }
+
+
+    private Link generateEntityLink(final Field field, final Object object, final ExpandOption expandOption) {
+
+        if (expandOption == null || expandOption.getExpandItems().isEmpty()) {
+            return null;
+        }
+
+        ODataNavigationProperty oDataNavigationProperty = field.getAnnotation(ODataNavigationProperty.class);
+        String linkName = oDataNavigationProperty.name().trim().isEmpty()
+                ? field.getName() : oDataNavigationProperty.name();
+        List<Entity> entities = new ArrayList<>();
+        boolean collectionType = Collection.class.isAssignableFrom(field.getType());
+
+        Optional<List<Entity>> optionalEntities = expandOption
+            .getExpandItems()
+            .parallelStream()
+            .filter(expandItem -> expandItem
+                .getResourcePath()
+                .getUriResourceParts()
+                .parallelStream()
+                .anyMatch(uriResource -> uriResource
+                    .getKind().equals(UriResourceKind.navigationProperty)
+                    && uriResource.getSegmentValue().equals(linkName)))
+            .findFirst()
+            .map(expandItem ->  {
+                ExpandOption expandNestedOption = expandItem.getExpandOption();
+
+                try {
+                    field.setAccessible(true);
+                    Object expandNestedObject = field.get(object);
+
+                    if (expandNestedObject != null) {
+
+                        if (collectionType) {
+                            List<?> expandNestedObjects = (List<?>) expandNestedObject;
+                            for (Object obj : expandNestedObjects) {
+                                Entity expandEntity = fromObject(obj, expandNestedOption);
+                                entities.add(expandEntity);
+                            }
+                        } else {
+                            Entity expandEntity = fromObject(expandNestedObject, expandNestedOption);
+                            entities.add(expandEntity);
+                        }
+                    }
+                    return entities;
+                } catch (IllegalAccessException | SaturnODataException e) {
+                    LOG.error(e.getMessage(), e);
+                    return null;
+                }
+            });
+
+        if (optionalEntities.isPresent()) {
+            Link link = new Link();
+            link.setTitle(linkName);
+
+            if (collectionType) {
+                EntityCollection collection = new EntityCollection();
+                collection.getEntities().addAll(entities);
+                link.setInlineEntitySet(collection);
+            } else {
+
+                if (optionalEntities.get().isEmpty()) {
+                    return null;
+                }
+                Entity entity = optionalEntities.get().get(0);
+                link.setInlineEntity(entity);
+                link.setType(entity.getType());
+            }
+            return link;
+        }
+        return null;
     }
 
     public OData getOData() {
