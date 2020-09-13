@@ -34,6 +34,8 @@ public final class StringUtils {
 
     public static final String COLLECTION_QUALIFIED_FULL_NAME = "Collection(%s)";
 
+    public static final String FQN = "%s.%s";
+
 
     public static boolean equals(final String s1, final String s2) {
         if (s1 == null && s2 == null) {

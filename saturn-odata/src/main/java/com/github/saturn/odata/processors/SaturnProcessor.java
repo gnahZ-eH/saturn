@@ -37,6 +37,7 @@ import com.github.saturn.odata.utils.ClassUtils;
 import com.github.saturn.odata.utils.ExceptionUtils;
 import com.github.saturn.odata.utils.ODataUtils;
 import com.github.saturn.odata.utils.StringUtils;
+import org.apache.olingo.commons.api.data.ComplexValue;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
@@ -62,13 +63,13 @@ public class SaturnProcessor implements Processor {
 
     private static final Logger LOG = LoggerFactory.getLogger(SaturnProcessor.class);
 
-    private OData oData;
+    private OData odata;
     private ServiceMetadata serviceMetadata;
     private SaturnEdmContext saturnEdmContext;
 
     @Override
-    public void init(final OData oData, final ServiceMetadata serviceMetadata) {
-        this.oData = oData;
+    public void init(final OData odata, final ServiceMetadata serviceMetadata) {
+        this.odata = odata;
         this.serviceMetadata = serviceMetadata;
     }
 
@@ -138,8 +139,8 @@ public class SaturnProcessor implements Processor {
                 propertyName, object.getClass(), field.getName(), field.getDeclaringClass(), actualValue);
 
         Class<?> fieldType = field.getType();
-        String type;
-        ValueType valueType;
+        String type = null;
+        ValueType valueType = null;
 
         PrimitiveType primitiveType = ODataUtils.getPrimitiveType(fieldType);
 
@@ -203,16 +204,22 @@ public class SaturnProcessor implements Processor {
             }
             ODataComplexType oDataComplexType = fieldType.getAnnotation(ODataComplexType.class);
             Object complexObj = field.get(object);
+
             if (complexObj != null) {
-                // todo
-                return null;
+                Entity complexEntity = fromObject(complexObj, expandOption);
+                ComplexValue complexValue = new ComplexValue();
+                complexValue.getValue().addAll(complexEntity.getProperties());
+                actualValue = complexValue;
             }
+
+            type = String.format(StringUtils.FQN, oDataComplexType.namespace(), oDataComplexType.name());
+            valueType = ValueType.COMPLEX;
         }
-        return null;
+        return new Property(type, propertyName, valueType, actualValue);
     }
 
-    public OData getoData() {
-        return oData;
+    public OData getOData() {
+        return odata;
     }
 
     public ServiceMetadata getServiceMetadata() {
