@@ -56,6 +56,8 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -64,6 +66,11 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class SaturnProcessor implements Processor {
 
@@ -131,12 +138,44 @@ public class SaturnProcessor implements Processor {
             if (field.isAnnotationPresent(ODataProperty.class)) {
                 Property property = generateEntityProperty(field, object, expandOption);
                 entity.addProperty(property);
+                LOG.debug("Load property {} into entity {} ", property, entityName);
 
             } else if (field.isAnnotationPresent(ODataNavigationProperty.class)) {
                 Link link = generateEntityLink(field, object, expandOption);
+                if (link != null) {
+                    entity.getNavigationLinks().add(link);
+                    LOG.debug("Load navigation property {} into entity {} ", link, entityName);
+                }
             }
         }
-        return null;
+
+        // entity should have a key array if it is not a complex type
+        if (oDataEntityType != null) {
+
+            String[] keys = oDataEntityType.keys();
+            ExceptionUtils.assertLengthGreaterThanZero(keys, oDataEntityType.name() + " -> keys");
+            Set<String> keySet = new HashSet<>(Arrays.asList(keys));
+            Map<String, Object> keyValues = entity
+                    .getProperties()
+                    .stream()
+                    .filter(k -> keySet.contains(k.getName()))
+                    .collect(Collectors.toMap(Property::getName, Property::getValue));
+            String entityId = ODataUtils.generateFormatedEntityId(keyValues);
+
+            if (entityId != null) {
+                try {
+                    entity.setId(new URI(oDataEntitySet.name() + entityId));
+                } catch (URISyntaxException e) {
+                    throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
+                }
+            }
+            entity.setType(String.format(StringUtils.FQN, oDataEntityType.namespace(), oDataEntityType.name()));
+
+        } else {
+            entity.setType(String.format(StringUtils.FQN, oDataComplexType.namespace(), oDataComplexType.name()));
+        }
+
+        return entity;
     }
 
     private Property generateEntityProperty(final Field field, final Object object, final ExpandOption expandOption) throws IllegalAccessException, SaturnODataException {
@@ -243,42 +282,42 @@ public class SaturnProcessor implements Processor {
         boolean collectionType = Collection.class.isAssignableFrom(field.getType());
 
         Optional<List<Entity>> optionalEntities = expandOption
-            .getExpandItems()
-            .parallelStream()
-            .filter(expandItem -> expandItem
-                .getResourcePath()
-                .getUriResourceParts()
+                .getExpandItems()
                 .parallelStream()
-                .anyMatch(uriResource -> uriResource
-                    .getKind().equals(UriResourceKind.navigationProperty)
-                    && uriResource.getSegmentValue().equals(linkName)))
-            .findFirst()
-            .map(expandItem ->  {
-                ExpandOption expandNestedOption = expandItem.getExpandOption();
+                .filter(expandItem -> expandItem
+                        .getResourcePath()
+                        .getUriResourceParts()
+                        .parallelStream()
+                        .anyMatch(uriResource -> uriResource
+                                .getKind().equals(UriResourceKind.navigationProperty)
+                                && uriResource.getSegmentValue().equals(linkName)))
+                .findFirst()
+                .map(expandItem -> {
+                    ExpandOption expandNestedOption = expandItem.getExpandOption();
 
-                try {
-                    field.setAccessible(true);
-                    Object expandNestedObject = field.get(object);
+                    try {
+                        field.setAccessible(true);
+                        Object expandNestedObject = field.get(object);
 
-                    if (expandNestedObject != null) {
+                        if (expandNestedObject != null) {
 
-                        if (collectionType) {
-                            List<?> expandNestedObjects = (List<?>) expandNestedObject;
-                            for (Object obj : expandNestedObjects) {
-                                Entity expandEntity = fromObject(obj, expandNestedOption);
+                            if (collectionType) {
+                                List<?> expandNestedObjects = (List<?>) expandNestedObject;
+                                for (Object obj : expandNestedObjects) {
+                                    Entity expandEntity = fromObject(obj, expandNestedOption);
+                                    entities.add(expandEntity);
+                                }
+                            } else {
+                                Entity expandEntity = fromObject(expandNestedObject, expandNestedOption);
                                 entities.add(expandEntity);
                             }
-                        } else {
-                            Entity expandEntity = fromObject(expandNestedObject, expandNestedOption);
-                            entities.add(expandEntity);
                         }
+                        return entities;
+                    } catch (IllegalAccessException | SaturnODataException e) {
+                        LOG.error(e.getMessage(), e);
+                        return null;
                     }
-                    return entities;
-                } catch (IllegalAccessException | SaturnODataException e) {
-                    LOG.error(e.getMessage(), e);
-                    return null;
-                }
-            });
+                });
 
         if (optionalEntities.isPresent()) {
             Link link = new Link();

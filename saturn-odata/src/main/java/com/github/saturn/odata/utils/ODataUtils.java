@@ -59,6 +59,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class ODataUtils {
     private static final Logger LOG = LoggerFactory.getLogger(ODataUtils.class);
@@ -492,5 +494,18 @@ public final class ODataUtils {
 
     public static boolean isNull(final FullQualifiedName fullQualifiedName) {
         return fullQualifiedName == null;
+    }
+
+    public static String generateFormatedEntityId(final Map<String, Object> keyValues) {
+        String entityId = keyValues
+            .entrySet()
+            .stream()
+            .map(e -> String.format("%s=%s", e.getKey(), e.getValue().toString()))
+            .collect(Collectors.joining(StringUtils.COMMA, StringUtils.LEFT_BRACKET, StringUtils.RIGHT_BRACKET));
+
+        entityId = StringUtils.replace(entityId, StringUtils.LEFT_ANGLE_BRACKET, StringUtils.LEFT_ANGLE_BRACKET_CODE);
+        entityId = StringUtils.replace(entityId, StringUtils.RIGHT_ANGLE_BRACKET, StringUtils.RIGHT_ANGLE_BRACKET_CODE);
+        entityId = StringUtils.replace(entityId, StringUtils.BLANK, StringUtils.BLANK_CODE);
+        return entityId;
     }
 }

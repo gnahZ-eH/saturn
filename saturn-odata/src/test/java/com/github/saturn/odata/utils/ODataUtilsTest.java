@@ -41,7 +41,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -105,5 +107,15 @@ class ODataUtilsTest {
 
         assertNotNull(csdlFunction);
         assertNull(csdlFunction2);
+    }
+
+    @Test
+    void generateFormatedEntityIdTest() {
+        Map<String, Object> keyValues = new HashMap<>();
+        keyValues.put("Id", 2);
+        keyValues.put("ClassId", 3);
+        keyValues.put("Name", "<joe zhang>");
+        String res = ODataUtils.generateFormatedEntityId(keyValues);
+        assertNotNull(res);
     }
 }
