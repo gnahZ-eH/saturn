@@ -24,7 +24,7 @@
 
 package com.github.saturn.odata.utils;
 
-public final class StringUtils {
+public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
     private StringUtils() { }
 
@@ -33,6 +33,26 @@ public final class StringUtils {
     public static final String COLLECTION = "Collection";
 
     public static final String COLLECTION_QUALIFIED_FULL_NAME = "Collection(%s)";
+
+    public static final String FQN = "%s.%s";
+
+    public static final String COMMA = ",";
+
+    public static final String LEFT_BRACKET = "(";
+
+    public static final String RIGHT_BRACKET = ")";
+
+    public static final String LEFT_ANGLE_BRACKET = "<";
+
+    public static final String RIGHT_ANGLE_BRACKET = ">";
+
+    public static final String BLANK = " ";
+
+    public static final String BLANK_CODE = "%20";
+
+    public static final String LEFT_ANGLE_BRACKET_CODE = "%3C";
+
+    public static final String RIGHT_ANGLE_BRACKET_CODE = "%3E";
 
 
     public static boolean equals(final String s1, final String s2) {

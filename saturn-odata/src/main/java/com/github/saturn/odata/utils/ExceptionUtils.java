@@ -55,4 +55,10 @@ public final class ExceptionUtils {
             throw new SaturnODataException("Object should not be null", HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public static void assertLengthGreaterThanZero(final Object[] objects, final String detailMessage) throws SaturnODataException {
+        if (objects == null || objects.length == 0) {
+            throw new SaturnODataException("The length of the %s should not be 0.", detailMessage);
+        }
+    }
 }
