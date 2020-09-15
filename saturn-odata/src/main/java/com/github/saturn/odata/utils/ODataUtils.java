@@ -260,20 +260,30 @@ public final class ODataUtils {
                 String oDataParameterName = oDataParameter.name().trim().isEmpty()
                         ? field.getName() : oDataParameter.name();
                 FullQualifiedName oDataParameterType = null;
+                boolean collectionType = false;
 
                 if (oDataParameter.type().isEmpty()) {
                     EdmPrimitiveTypeKind typeKind = getEdmPrimitiveType(fieldType);
 
                     if (typeKind != null) {
                         oDataParameterType = typeKind.getFullQualifiedName();
-                    } else {
+                    } else if (fieldType.isAssignableFrom(Collection.class)) {
+                        collectionType = true;
+                        Type type = field.getGenericType();
 
-                        if (fieldType.isAnnotationPresent(ODataEnumType.class)) {
-                            ODataEnumType oDataEnumType = fieldType.getAnnotation(ODataEnumType.class);
-                            String namespace = oDataEnumType.namespace().isEmpty() ? context.getNameSpace() : oDataEnumType.namespace();
-                            String name = oDataEnumType.name().isEmpty() ? fieldType.getSimpleName() : oDataEnumType.name();
-                            oDataParameterType = generateFQN(namespace, name);
+                        if (type instanceof ParameterizedType) {
+                            ParameterizedType parameterizedType = (ParameterizedType) type;
+                            Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
+                            EdmPrimitiveTypeKind argTypeKind = getEdmPrimitiveType(argType);
+
+                            if (argTypeKind != null) {
+                                oDataParameterType = argTypeKind.getFullQualifiedName();
+                            } else {
+                                oDataParameterType = getFullQualifiedNameFromClassType(argType, context.getNameSpace());
+                            }
                         }
+                    } else {
+                        oDataParameterType = getFullQualifiedNameFromClassType(fieldType, context.getNameSpace());
                     }
                 } else {
                     EdmPrimitiveTypeKind typeKind = getEdmPrimitiveType(oDataParameter.type());
@@ -288,7 +298,15 @@ public final class ODataUtils {
                 CsdlParameter csdlParameter = new CsdlParameter()
                         .setName(oDataParameterName)
                         .setType(oDataParameterType)
+                        .setCollection(collectionType)
                         .setNullable(oDataParameter.nullable());
+
+                if (oDataParameterType != null
+                        && oDataParameterType.equals(EdmPrimitiveTypeKind.Decimal.getFullQualifiedName())) {
+                    csdlParameter.setPrecision(oDataParameter.precision());
+                    csdlParameter.setScale(oDataParameter.scale());
+                }
+
                 csdlFunction.getParameters().add(csdlParameter);
             }
         }
@@ -339,7 +357,7 @@ public final class ODataUtils {
 
                     if (typeKind != null) {
                         oDataParameterType = typeKind.getFullQualifiedName();
-                    } else if (fieldType.isAssignableFrom(List.class)) {
+                    } else if (fieldType.isAssignableFrom(Collection.class)) {
                         collectionType = true;
                         Type type = field.getGenericType();
 
@@ -358,7 +376,13 @@ public final class ODataUtils {
                         oDataParameterType = getFullQualifiedNameFromClassType(fieldType, context.getNameSpace());
                     }
                 } else {
-                    oDataParameterType = getEdmPrimitiveType(oDataParameter.type()).getFullQualifiedName();
+                    EdmPrimitiveTypeKind typeKind = getEdmPrimitiveType(oDataParameter.type());
+
+                    if (typeKind != null) {
+                        oDataParameterType = typeKind.getFullQualifiedName();
+                    } else {
+                        oDataParameterType = generateFQN(context.getNameSpace(), oDataParameter.type());
+                    }
                 }
 
                 CsdlParameter csdlParameter = new CsdlParameter()
@@ -436,16 +460,14 @@ public final class ODataUtils {
             String namespace = oDataEnumType.namespace().isEmpty() ? contextNamespace : oDataEnumType.namespace();
             String name = oDataEnumType.name().isEmpty() ? clazz.getSimpleName() : oDataEnumType.name();
             fullQualifiedName = generateFQN(namespace, name);
-        }
 
-        if (clazz.isAnnotationPresent(ODataEntityType.class)) {
+        } else if (clazz.isAnnotationPresent(ODataEntityType.class)) {
             ODataEntityType oDataEntityType = clazz.getAnnotation(ODataEntityType.class);
             String namespace = oDataEntityType.namespace().isEmpty() ? contextNamespace : oDataEntityType.namespace();
             String name = oDataEntityType.name().isEmpty() ? clazz.getSimpleName() : oDataEntityType.name();
             fullQualifiedName = generateFQN(namespace, name);
-        }
 
-        if (clazz.isAnnotationPresent(ODataComplexType.class)) {
+        } else if (clazz.isAnnotationPresent(ODataComplexType.class)) {
             ODataComplexType oDataComplexType = clazz.getAnnotation(ODataComplexType.class);
             String namespace = oDataComplexType.namespace().isEmpty() ? contextNamespace : oDataComplexType.namespace();
             String name = oDataComplexType.name().isEmpty() ? clazz.getSimpleName() : oDataComplexType.name();
