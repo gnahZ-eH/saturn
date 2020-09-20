@@ -8,4 +8,11 @@ Emoji |          |
 🛠️    | Optimize |
 🧩    | Develop  |
 ❌    | Delete   |
-🧪    | Test     | 
+🧪    | Test     |
+🍒    | Merge    |
+📜    | README   |
+📑    | Config   |
+ 
+
+### 
+CsdlParameter in getFunction could be collection

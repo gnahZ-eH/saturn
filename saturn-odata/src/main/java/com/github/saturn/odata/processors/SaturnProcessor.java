@@ -61,6 +61,7 @@ import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -71,6 +72,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 public class SaturnProcessor implements Processor {
 
@@ -101,8 +103,8 @@ public class SaturnProcessor implements Processor {
      * This method takes an object to extract data and create an entityType defined in schema.
      *
      * @param object An instance of a class annotated with <code>@EdmEntity</code> or <code>@EdmComplex</code>
-     * @param expandOption
-     * @return
+     * @param expandOption ..
+     * @return ..
      */
     protected Entity fromObject(final Object object, final ExpandOption expandOption) throws SaturnODataException, IllegalAccessException {
         ExceptionUtils.assertNotNull(object);
@@ -337,6 +339,71 @@ public class SaturnProcessor implements Processor {
                 link.setType(entity.getType());
             }
             return link;
+        }
+        return null;
+    }
+
+    protected Object fromEntity(final Entity entity, final Class<?> clazz) throws IllegalAccessException, InstantiationException {
+
+        if (entity == null || clazz == null) {
+            return null;
+        }
+        Object object = clazz.newInstance();
+        List<Field> fields = ClassUtils.getFields(clazz);
+        LOG.debug("{} class loaded in fields {}", clazz, fields.size());
+
+        for (Field field : fields) {
+
+            if (field.isAnnotationPresent(ODataProperty.class)) {
+
+                ODataProperty oDataProperty = field.getAnnotation(ODataProperty.class);
+                String propertyName = oDataProperty.name().trim().isEmpty() ? field.getName() : oDataProperty.name();
+                Property property = entity.getProperty(propertyName);
+
+                if (property != null) {
+                    Class<?> fieldClass = field.getType();
+
+                    if (fieldClass.isAnnotationPresent(ODataComplexType.class)) {
+                        Entity complexEntity = new Entity();
+                        ComplexValue complexValue = (ComplexValue) property.getValue();
+                        complexEntity.getProperties().addAll(complexValue.getValue());
+                        Object complexObject = fromEntity(complexEntity, fieldClass);
+                        field.setAccessible(true);
+                        field.set(object, complexObject);
+
+                    } else if (fieldClass.isAnnotationPresent(ODataEnumType.class) && property.asEnum() != null) {
+                        Enum<?>[] constants = (Enum<?>[]) fieldClass.getEnumConstants();
+                        Arrays.sort(constants, Comparator.comparingInt(Enum::ordinal));
+                        // todo: need to test here
+                        Object actualValue = constants[((Enum<?>) property.asEnum()).ordinal()];
+                        field.setAccessible(true);
+                        field.set(object, actualValue);
+
+                    } else if (Collection.class.isAssignableFrom(field.getType())) {
+                        field.setAccessible(true);
+                        field.set(object, property.getValue());
+
+                    } else {
+                        if (field.getType().isAssignableFrom(LocalDate.class)
+                                && property.getValue() instanceof GregorianCalendar) {
+                            field.setAccessible(true);
+                            field.set(object, ((GregorianCalendar) property.getValue()).toZonedDateTime().toLocalDate());
+
+                        } else if (field.getType().isAssignableFrom(LocalDateTime.class)
+                                && property.getValue() instanceof Timestamp) {
+                            field.setAccessible(true);
+                            field.set(object, ((Timestamp) property.getValue()).toLocalDateTime());
+
+                        } else {
+                            field.setAccessible(true);
+                            field.set(object, property.getValue());
+                        }
+                    }
+                }
+            } else if (field.isAnnotationPresent(ODataNavigationProperty.class)) {
+                // todo
+                return null;
+            }
         }
         return null;
     }
