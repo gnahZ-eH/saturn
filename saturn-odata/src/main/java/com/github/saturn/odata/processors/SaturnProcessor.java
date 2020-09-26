@@ -379,7 +379,7 @@ public class SaturnProcessor implements Processor {
                         field.setAccessible(true);
                         field.set(object, actualValue);
 
-                    } else if (Collection.class.isAssignableFrom(field.getType())) {
+                    } else if (Collection.class.isAssignableFrom(fieldClass)) {
                         field.setAccessible(true);
                         field.set(object, property.getValue());
 
@@ -400,12 +400,46 @@ public class SaturnProcessor implements Processor {
                         }
                     }
                 }
+
             } else if (field.isAnnotationPresent(ODataNavigationProperty.class)) {
-                // todo
-                return null;
+                ODataNavigationProperty oDataNavigationProperty = field.getAnnotation(ODataNavigationProperty.class);
+                String propertyName = oDataNavigationProperty.name().isEmpty() ? field.getName() : oDataNavigationProperty.name();
+                Link link = entity.getNavigationLink(propertyName);
+
+                if (link != null) {
+                    Class<?> fieldClass = field.getType();
+
+                    if (Collection.class.isAssignableFrom(fieldClass)) {
+                        EntityCollection entityCollection = link.getInlineEntitySet();
+
+                        if (entityCollection != null) {
+                            List<Entity> entities = entityCollection.getEntities();
+                            ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
+                            Class<?> argType = (Class<?>) (parameterizedType.getActualTypeArguments()[0]);
+                            List<Object> inlineObjects = new ArrayList<>();
+
+                            for (Entity e : entities) {
+                                Object inlineObject = fromEntity(e, argType);
+                                if (inlineObject != null) {
+                                    inlineObjects.add(inlineObject);
+                                }
+                            }
+
+                            field.setAccessible(true);
+                            field.set(object, inlineObjects);
+                        }
+
+                    } else {
+                        field.setAccessible(true);
+                        ODataEntityType oDataEntityType = fieldClass.getAnnotation(ODataEntityType.class);
+                        Class<?> entityClazz = saturnEdmContext.getEntityTypes().get(oDataEntityType.name());
+                        Object entityObject = fromEntity(link.getInlineEntity(), entityClazz);
+                        field.set(object, entityObject);
+                    }
+                }
             }
         }
-        return null;
+        return object;
     }
 
     public OData getOData() {
