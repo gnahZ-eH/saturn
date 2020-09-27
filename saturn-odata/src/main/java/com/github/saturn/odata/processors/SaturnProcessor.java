@@ -46,7 +46,9 @@ import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.edm.EdmBindingTarget;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
+import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.OData;
@@ -460,7 +462,7 @@ public class SaturnProcessor implements Processor {
 
                 if (link.getBindingLinks().isEmpty()) {
                     String bindingLink = link.getBindingLink();
-                    Entity entity = getEntityFromBindingLink(bindingLink, serviceMap, uri);
+                    Entity entity = generateEntityFromBindingLink(bindingLink, serviceMap, uri);
                     naviLink.setInlineEntity(entity);
 
                 } else {
@@ -472,7 +474,7 @@ public class SaturnProcessor implements Processor {
                     }
 
                     for (String bindingLink : link.getBindingLinks()) {
-                        Entity entity = getEntityFromBindingLink(bindingLink, serviceMap, uri);
+                        Entity entity = generateEntityFromBindingLink(bindingLink, serviceMap, uri);
                         entityCollection.getEntities().add(entity);
                     }
                 }
@@ -480,7 +482,7 @@ public class SaturnProcessor implements Processor {
         }
     }
 
-    private Entity getEntityFromBindingLink(String bindingLink, Map<String, SaturnODataService> serviceMap, String uri) throws SaturnODataException {
+    private Entity generateEntityFromBindingLink(String bindingLink, Map<String, SaturnODataService> serviceMap, String uri) throws SaturnODataException {
         try {
             UriResourceEntitySet uriResourceEntitySet = odata.createUriHelper().parseEntityId(serviceMetadata.getEdm(), bindingLink, uri);
             EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
@@ -502,6 +504,19 @@ public class SaturnProcessor implements Processor {
         } catch (DeserializerException | SaturnODataException | IllegalAccessException e) {
             throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    protected EdmEntitySet getNavigationEntitySet(EdmEntitySet fromEdmEntitySet, EdmNavigationProperty edmNavigationProperty) throws SaturnODataException {
+        EdmEntitySet navigationEntitySet;
+        EdmBindingTarget edmBindingTarget = fromEdmEntitySet.getRelatedBindingTarget(edmNavigationProperty.getName());
+        ExceptionUtils.assertNotNull(edmBindingTarget, EdmBindingTarget.class.getSimpleName());
+
+        if (edmBindingTarget instanceof EdmEntitySet) {
+            navigationEntitySet = (EdmEntitySet) edmBindingTarget;
+        } else {
+            throw new SaturnODataException(HttpStatusCode.NOT_IMPLEMENTED, "Haven't implemented yet.");
+        }
+        return navigationEntitySet;
     }
 
     public OData getOData() {
