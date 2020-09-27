@@ -22,36 +22,20 @@
  * SOFTWARE.
  */
 
-package com.github.saturn.odata.interfaces;
+package com.github.saturn.odata.enums;
 
-import com.github.saturn.odata.uri.QueryOptions;
+public enum SelfDefinedType {
 
-import org.apache.olingo.server.api.uri.UriParameter;
+    ENTITY("Self-Defined-Entity"),
+    SERVICE("Self-Defined-Service");
 
-import java.util.List;
-import java.util.Map;
+    private final String message;
 
-public interface SaturnODataService {
-
-    /**
-     *
-     * @param object       edm defined by selves.
-     * @param superObject
-     * @return             edm defined by selves.
-     */
-    Object create(Object object, Object superObject);
-
-    Object retrieveByKey(Map<String, UriParameter> parameterMap, QueryOptions queryOptions, Object superObject);
-
-    default Object retrieveByKey(Map<String, UriParameter> parameterMap) {
-        return retrieveByKey(parameterMap, null, null);
+    SelfDefinedType(final String message) {
+        this.message = message;
     }
 
-    Iterable<?> retrieveAll(QueryOptions queryOptions, Object superObject);
-
-    Object update(Map<String, UriParameter> parameterMap, List<String> properties, Object object, Object superObject);
-
-    Object delete(Map<String, UriParameter> parameterMap, Object superObject);
-
-    Long count(QueryOptions queryOptions, Object superObject);
+    public String getMessage() {
+        return message;
+    }
 }

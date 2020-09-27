@@ -31,7 +31,9 @@ import com.github.saturn.odata.annotations.ODataComplexType;
 import com.github.saturn.odata.annotations.ODataProperty;
 import com.github.saturn.odata.annotations.ODataNavigationProperty;
 import com.github.saturn.odata.enums.PrimitiveType;
+import com.github.saturn.odata.enums.SelfDefinedType;
 import com.github.saturn.odata.exceptions.SaturnODataException;
+import com.github.saturn.odata.interfaces.SaturnODataService;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.utils.ClassUtils;
 
@@ -44,11 +46,17 @@ import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.edm.EdmBindingTarget;
+import org.apache.olingo.commons.api.edm.EdmEntitySet;
+import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ServiceMetadata;
+import org.apache.olingo.server.api.deserializer.DeserializerException;
 import org.apache.olingo.server.api.processor.Processor;
+import org.apache.olingo.server.api.uri.UriParameter;
+import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceKind;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.slf4j.Logger;
@@ -95,8 +103,8 @@ public class SaturnProcessor implements Processor {
         return this;
     }
 
-    protected Entity fromObject(final Object object) throws SaturnODataException, IllegalAccessException {
-        return fromObject(object, null);
+    protected Entity fromObject2Entity(final Object object) throws SaturnODataException, IllegalAccessException {
+        return fromObject2Entity(object, null);
     }
 
     /**
@@ -106,8 +114,8 @@ public class SaturnProcessor implements Processor {
      * @param expandOption ..
      * @return ..
      */
-    protected Entity fromObject(final Object object, final ExpandOption expandOption) throws SaturnODataException, IllegalAccessException {
-        ExceptionUtils.assertNotNull(object);
+    protected Entity fromObject2Entity(final Object object, final ExpandOption expandOption) throws SaturnODataException, IllegalAccessException {
+        ExceptionUtils.assertNotNull(object, SelfDefinedType.ENTITY.getMessage());
 
         Entity entity = new Entity();
         Class<?> clazz = object.getClass();
@@ -258,7 +266,7 @@ public class SaturnProcessor implements Processor {
             Object complexObj = field.get(object);
 
             if (complexObj != null) {
-                Entity complexEntity = fromObject(complexObj, expandOption);
+                Entity complexEntity = fromObject2Entity(complexObj, expandOption);
                 ComplexValue complexValue = new ComplexValue();
                 complexValue.getValue().addAll(complexEntity.getProperties());
                 actualValue = complexValue;
@@ -306,11 +314,11 @@ public class SaturnProcessor implements Processor {
                             if (collectionType) {
                                 List<?> expandNestedObjects = (List<?>) expandNestedObject;
                                 for (Object obj : expandNestedObjects) {
-                                    Entity expandEntity = fromObject(obj, expandNestedOption);
+                                    Entity expandEntity = fromObject2Entity(obj, expandNestedOption);
                                     entities.add(expandEntity);
                                 }
                             } else {
-                                Entity expandEntity = fromObject(expandNestedObject, expandNestedOption);
+                                Entity expandEntity = fromObject2Entity(expandNestedObject, expandNestedOption);
                                 entities.add(expandEntity);
                             }
                         }
@@ -343,7 +351,7 @@ public class SaturnProcessor implements Processor {
         return null;
     }
 
-    protected Object fromEntity(final Entity entity, final Class<?> clazz) throws IllegalAccessException, InstantiationException {
+    protected Object fromEntity2Object(final Entity entity, final Class<?> clazz) throws IllegalAccessException, InstantiationException {
 
         if (entity == null || clazz == null) {
             return null;
@@ -367,7 +375,7 @@ public class SaturnProcessor implements Processor {
                         Entity complexEntity = new Entity();
                         ComplexValue complexValue = (ComplexValue) property.getValue();
                         complexEntity.getProperties().addAll(complexValue.getValue());
-                        Object complexObject = fromEntity(complexEntity, fieldClass);
+                        Object complexObject = fromEntity2Object(complexEntity, fieldClass);
                         field.setAccessible(true);
                         field.set(object, complexObject);
 
@@ -419,7 +427,7 @@ public class SaturnProcessor implements Processor {
                             List<Object> inlineObjects = new ArrayList<>();
 
                             for (Entity e : entities) {
-                                Object inlineObject = fromEntity(e, argType);
+                                Object inlineObject = fromEntity2Object(e, argType);
                                 if (inlineObject != null) {
                                     inlineObjects.add(inlineObject);
                                 }
@@ -433,13 +441,82 @@ public class SaturnProcessor implements Processor {
                         field.setAccessible(true);
                         ODataEntityType oDataEntityType = fieldClass.getAnnotation(ODataEntityType.class);
                         Class<?> entityClazz = saturnEdmContext.getEntityTypes().get(oDataEntityType.name());
-                        Object entityObject = fromEntity(link.getInlineEntity(), entityClazz);
+                        Object entityObject = fromEntity2Object(link.getInlineEntity(), entityClazz);
                         field.set(object, entityObject);
                     }
                 }
             }
         }
         return object;
+    }
+
+    protected void fromNaviBindings2NaviLinks(Entity reqEntity, Map<String, SaturnODataService> serviceMap, String uri) throws SaturnODataException {
+        List<Link> naviBindings = reqEntity.getNavigationBindings();
+
+        if (naviBindings != null && naviBindings.size() > 0) {
+
+            for (Link link : naviBindings) {
+                Link naviLink = new Link();
+                naviLink.setTitle(link.getTitle());
+                reqEntity.getNavigationLinks().add(naviLink);
+
+                if (link.getBindingLinks().isEmpty()) {
+                    String bindingLink = link.getBindingLink();
+                    Entity entity = generateEntityFromBindingLink(bindingLink, serviceMap, uri);
+                    naviLink.setInlineEntity(entity);
+
+                } else {
+                    EntityCollection entityCollection = naviLink.getInlineEntitySet();
+
+                    if (entityCollection == null) {
+                        entityCollection = new EntityCollection();
+                        naviLink.setInlineEntitySet(entityCollection);
+                    }
+
+                    for (String bindingLink : link.getBindingLinks()) {
+                        Entity entity = generateEntityFromBindingLink(bindingLink, serviceMap, uri);
+                        entityCollection.getEntities().add(entity);
+                    }
+                }
+            }
+        }
+    }
+
+    private Entity generateEntityFromBindingLink(String bindingLink, Map<String, SaturnODataService> serviceMap, String uri) throws SaturnODataException {
+        try {
+            UriResourceEntitySet uriResourceEntitySet = odata.createUriHelper().parseEntityId(serviceMetadata.getEdm(), bindingLink, uri);
+            EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
+            List<UriParameter> parameters = uriResourceEntitySet.getKeyPredicates();
+            Map<String, UriParameter> parameterMap = parameters
+                    .stream()
+                    .collect(Collectors.toMap(UriParameter::getName, p -> p));
+
+            // services defined by self implement interface SaturnODataService.
+            SaturnODataService oDataService = serviceMap.get(edmEntitySet.getName());
+            ExceptionUtils.assertNotNull(oDataService, SelfDefinedType.SERVICE.getMessage(), edmEntitySet.getName());
+
+            // the object is springEntity defined by self.
+            Object object = oDataService.retrieveByKey(parameterMap);
+            ExceptionUtils.assertNotNull(object, SelfDefinedType.ENTITY.getMessage(), edmEntitySet.getName());
+
+            return fromObject2Entity(object, null);
+
+        } catch (DeserializerException | SaturnODataException | IllegalAccessException e) {
+            throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    protected EdmEntitySet getNavigationEntitySet(EdmEntitySet fromEdmEntitySet, EdmNavigationProperty edmNavigationProperty) throws SaturnODataException {
+        EdmEntitySet navigationEntitySet;
+        EdmBindingTarget edmBindingTarget = fromEdmEntitySet.getRelatedBindingTarget(edmNavigationProperty.getName());
+        ExceptionUtils.assertNotNull(edmBindingTarget, EdmBindingTarget.class.getSimpleName());
+
+        if (edmBindingTarget instanceof EdmEntitySet) {
+            navigationEntitySet = (EdmEntitySet) edmBindingTarget;
+        } else {
+            throw new SaturnODataException(HttpStatusCode.NOT_IMPLEMENTED, "Haven't implemented yet.");
+        }
+        return navigationEntitySet;
     }
 
     public OData getOData() {

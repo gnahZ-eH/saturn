@@ -54,6 +54,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
     public static final String RIGHT_ANGLE_BRACKET_CODE = "%3E";
 
+    public static final String REGEX_DATE_FORMAT = "\\d{4}-\\d{2}-\\d{2}";
 
     public static boolean equals(final String s1, final String s2) {
         if (s1 == null && s2 == null) {
