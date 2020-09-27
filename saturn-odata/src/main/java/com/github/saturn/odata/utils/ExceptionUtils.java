@@ -50,10 +50,15 @@ public final class ExceptionUtils {
         }
     }
 
-    public static void assertNotNull(final Object object) throws SaturnODataException {
+    public static void assertNotNull(final Object object, final String type, final String objectName) throws SaturnODataException {
         if (object == null) {
-            throw new SaturnODataException("Object should not be null", HttpStatusCode.INTERNAL_SERVER_ERROR);
+            throw new SaturnODataException(
+                    HttpStatusCode.INTERNAL_SERVER_ERROR, "Object(%s) of type(%s) could not be found, should not be null", objectName, type);
         }
+    }
+
+    public static void assertNotNull(final Object object, final String type) throws SaturnODataException {
+        assertNotNull(object, type, "");
     }
 
     public static void assertLengthGreaterThanZero(final Object[] objects, final String detailMessage) throws SaturnODataException {

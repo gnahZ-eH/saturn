@@ -52,7 +52,7 @@ public class SaturnODataException extends ODataException {
         super(cause);
     }
 
-    public SaturnODataException(final String exceptionMessage, final HttpStatusCode httpStatus) {
+    public SaturnODataException(final HttpStatusCode httpStatus, final String exceptionMessage) {
         super(exceptionMessage);
         this.statusCode = httpStatus.getStatusCode();
     }
