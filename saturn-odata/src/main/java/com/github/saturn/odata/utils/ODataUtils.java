@@ -55,7 +55,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -418,30 +418,49 @@ public final class ODataUtils {
     }
 
     public static EdmPrimitiveTypeKind getEdmPrimitiveType(final Class<?> type) {
-        if (type.isAssignableFrom(Integer.class)
-                || type.isAssignableFrom(int.class)) {
-            return EdmPrimitiveTypeKind.Int32;
-        } else if (type.isAssignableFrom(Long.class)
-                || type.isAssignableFrom(long.class)) {
-            return EdmPrimitiveTypeKind.Int64;
-        } else if (type.isAssignableFrom(Float.class)
-                || type.isAssignableFrom(float.class)
-                || type.isAssignableFrom(Double.class)
-                || type.isAssignableFrom(double.class)) {
-            return EdmPrimitiveTypeKind.Double;
-        } else if (type.isAssignableFrom(String.class)) {
-            return EdmPrimitiveTypeKind.String;
-        } else if (type.isAssignableFrom(Boolean.class)
-                || type.isAssignableFrom(boolean.class)) {
-            return EdmPrimitiveTypeKind.Boolean;
-        } else if (type.isAssignableFrom(LocalDate.class)) {
-            return EdmPrimitiveTypeKind.Date;
-        } else if (type.isAssignableFrom(LocalDateTime.class)) {
-            return EdmPrimitiveTypeKind.DateTimeOffset;
-        } else if (type.isAssignableFrom(BigDecimal.class)) {
-            return EdmPrimitiveTypeKind.Decimal;
+        EdmPrimitiveTypeKind edmPrimitiveTypeKind = null;
+        if (PrimitiveType.PT_BY_BT.containsKey(type)) {
+            edmPrimitiveTypeKind =
+                    PrimitiveType.EDM_PT_BY_NAME.get(PrimitiveType.PT_BY_BT.get(type).getType());
         }
-        return null;
+        return edmPrimitiveTypeKind;
+    }
+
+    public static Object getBasicTypeValue(String primitiveType, String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        Class<?> basicType = PrimitiveType.BT_BY_PT_NAME.get(primitiveType);
+
+        if (basicType == null) {
+            return value;
+        }
+
+        if (basicType.isAssignableFrom(Integer.class)
+                || basicType.isAssignableFrom(int.class)) {
+            return Integer.parseInt(value);
+
+        } else if (basicType.isAssignableFrom(Long.class)
+                || basicType.isAssignableFrom(long.class)) {
+            return Long.parseLong(value);
+
+        } else if (basicType.isAssignableFrom(Float.class)
+                || basicType.isAssignableFrom(float.class)
+                || basicType.isAssignableFrom(Double.class)
+                || basicType.isAssignableFrom(double.class)) {
+            return Double.parseDouble(value);
+
+        } else if (basicType.isAssignableFrom(LocalDate.class)
+                && value.matches(StringUtils.REGEX_DATE_FORMAT)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
+            return LocalDate.parse(value, formatter);
+
+        } else if (basicType.isAssignableFrom(BigDecimal.class)) {
+            return BigDecimal.valueOf(Double.parseDouble(value));
+
+        } else {
+            return value;
+        }
     }
 
     public static PrimitiveType getPrimitiveType(final Class<?> type) {
