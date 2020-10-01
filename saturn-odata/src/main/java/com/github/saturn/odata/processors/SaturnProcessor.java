@@ -33,7 +33,7 @@ import com.github.saturn.odata.annotations.ODataNavigationProperty;
 import com.github.saturn.odata.enums.PrimitiveType;
 import com.github.saturn.odata.enums.SelfDefinedType;
 import com.github.saturn.odata.exceptions.SaturnODataException;
-import com.github.saturn.odata.interfaces.SaturnODataService;
+import com.github.saturn.odata.interfaces.EntityOperation;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.utils.ClassUtils;
 
@@ -450,7 +450,7 @@ public class SaturnProcessor implements Processor {
         return object;
     }
 
-    protected void fromNaviBindings2NaviLinks(Entity reqEntity, Map<String, SaturnODataService> serviceMap, String uri) throws SaturnODataException {
+    protected void fromNaviBindings2NaviLinks(Entity reqEntity, Map<String, EntityOperation> entityOperationMap, String uri) throws SaturnODataException {
         List<Link> naviBindings = reqEntity.getNavigationBindings();
 
         if (naviBindings != null && naviBindings.size() > 0) {
@@ -462,7 +462,7 @@ public class SaturnProcessor implements Processor {
 
                 if (link.getBindingLinks().isEmpty()) {
                     String bindingLink = link.getBindingLink();
-                    Entity entity = generateEntityFromBindingLink(bindingLink, serviceMap, uri);
+                    Entity entity = generateEntityFromBindingLink(bindingLink, entityOperationMap, uri);
                     naviLink.setInlineEntity(entity);
 
                 } else {
@@ -474,7 +474,7 @@ public class SaturnProcessor implements Processor {
                     }
 
                     for (String bindingLink : link.getBindingLinks()) {
-                        Entity entity = generateEntityFromBindingLink(bindingLink, serviceMap, uri);
+                        Entity entity = generateEntityFromBindingLink(bindingLink, entityOperationMap, uri);
                         entityCollection.getEntities().add(entity);
                     }
                 }
@@ -482,7 +482,7 @@ public class SaturnProcessor implements Processor {
         }
     }
 
-    private Entity generateEntityFromBindingLink(String bindingLink, Map<String, SaturnODataService> serviceMap, String uri) throws SaturnODataException {
+    private Entity generateEntityFromBindingLink(String bindingLink, Map<String, EntityOperation> entityOperationMap, String uri) throws SaturnODataException {
         try {
             UriResourceEntitySet uriResourceEntitySet = odata.createUriHelper().parseEntityId(serviceMetadata.getEdm(), bindingLink, uri);
             EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
@@ -492,11 +492,11 @@ public class SaturnProcessor implements Processor {
                     .collect(Collectors.toMap(UriParameter::getName, p -> p));
 
             // services defined by self implement interface SaturnODataService.
-            SaturnODataService oDataService = serviceMap.get(edmEntitySet.getName());
-            ExceptionUtils.assertNotNull(oDataService, SelfDefinedType.SERVICE.getMessage(), edmEntitySet.getName());
+            EntityOperation entityOperation = entityOperationMap.get(edmEntitySet.getName());
+            ExceptionUtils.assertNotNull(entityOperation, SelfDefinedType.SERVICE.getMessage(), edmEntitySet.getName());
 
             // the object is springEntity defined by self.
-            Object object = oDataService.retrieveByKey(parameterMap);
+            Object object = entityOperation.retrieveByKey(parameterMap);
             ExceptionUtils.assertNotNull(object, SelfDefinedType.ENTITY.getMessage(), edmEntitySet.getName());
 
             return fromObject2Entity(object, null);

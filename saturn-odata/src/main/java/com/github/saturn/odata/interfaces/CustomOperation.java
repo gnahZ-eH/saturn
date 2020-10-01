@@ -24,34 +24,12 @@
 
 package com.github.saturn.odata.interfaces;
 
-import com.github.saturn.odata.uri.QueryOptions;
-
+import com.github.saturn.odata.exceptions.SaturnODataException;
 import org.apache.olingo.server.api.uri.UriParameter;
 
-import java.util.List;
 import java.util.Map;
 
-public interface SaturnODataService {
+public interface CustomOperation<T> {
 
-    /**
-     *
-     * @param object       edm defined by selves.
-     * @param superObject
-     * @return             edm defined by selves.
-     */
-    Object create(Object object, Object superObject);
-
-    Object retrieveByKey(Map<String, UriParameter> parameterMap, QueryOptions queryOptions, Object superObject);
-
-    default Object retrieveByKey(Map<String, UriParameter> parameterMap) {
-        return retrieveByKey(parameterMap, null, null);
-    }
-
-    Iterable<?> retrieveAll(QueryOptions queryOptions, Object superObject);
-
-    Object update(Map<String, UriParameter> parameterMap, List<String> properties, Object object, Object superObject);
-
-    Object delete(Map<String, UriParameter> parameterMap, Object superObject);
-
-    Long count(QueryOptions queryOptions, Object superObject);
+    T process(Map<String, UriParameter> parameterMap, boolean isBound) throws SaturnODataException;
 }
