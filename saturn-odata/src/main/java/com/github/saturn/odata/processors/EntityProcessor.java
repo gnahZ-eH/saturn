@@ -71,7 +71,6 @@ import java.util.stream.Collectors;
 public class EntityProcessor extends SaturnProcessor implements org.apache.olingo.server.api.processor.EntityProcessor, EntityCollectionProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityProcessor.class);
-    
     private Map<String, EntityOperation> entityOperationMap;
     private Map<String, CustomOperation<?>> functionMap;
 
@@ -128,8 +127,8 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
                 uriInfo,
                 contentType,
                 edmEntityType,
-                uriResourceEntitySet,
                 edmEntitySet,
+                uriResourceEntitySet,
                 null,
                 null,
                 false);
@@ -161,8 +160,8 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
                 uriInfo,
                 contentType,
                 edmEntityType,
-                null,
                 naviEdmEntitySet,
+                null,
                 uriResourceNavigation,
                 superObject,
                 true);
@@ -207,8 +206,8 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
             UriInfo uriInfo,
             ContentType contentType,
             EdmEntityType edmEntityType,
-            UriResourceEntitySet uriResourceEntitySet,
             EdmEntitySet edmEntitySet,
+            UriResourceEntitySet uriResourceEntitySet,
             UriResourceNavigation uriResourceNavigation,
             Object superObject,
             boolean isNavi) throws SaturnODataException {
