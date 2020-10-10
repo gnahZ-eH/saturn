@@ -86,7 +86,7 @@ public class SaturnProcessor implements Processor {
 
     private static final Logger LOG = LoggerFactory.getLogger(SaturnProcessor.class);
 
-    private OData odata;
+    protected OData odata;
     private ServiceMetadata serviceMetadata;
     private SaturnEdmContext saturnEdmContext;
 

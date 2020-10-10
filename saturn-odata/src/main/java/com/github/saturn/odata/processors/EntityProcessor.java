@@ -32,9 +32,11 @@ import com.github.saturn.odata.interfaces.EntityOperation;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.uri.QueryOptions;
 import com.github.saturn.odata.utils.ExceptionUtils;
+import com.github.saturn.odata.utils.StringUtils;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
+import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
@@ -57,16 +59,24 @@ import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceNavigation;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.apache.olingo.server.api.uri.queryoption.FilterOption;
+import org.apache.olingo.server.api.uri.queryoption.SkipOption;
+import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
+import org.apache.olingo.server.api.uri.queryoption.CountOption;
+import org.apache.olingo.server.api.uri.queryoption.TopOption;
+import org.apache.olingo.server.core.uri.queryoption.TopOptionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EntityProcessor extends SaturnProcessor implements org.apache.olingo.server.api.processor.EntityProcessor, EntityCollectionProcessor {
 
@@ -115,6 +125,7 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
     }
 
     // todo need to be tested
+    // only one result will be returned
     private void readEntity(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException {
 
         List<UriResource> uriResourceParts = uriInfo.getUriResourceParts();
@@ -292,7 +303,69 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
 
     @Override
     public void readEntityCollection(ODataRequest oDataRequest, ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws ODataApplicationException, ODataLibraryException {
+        UriResource resource = getResourceFromUriInfo(uriInfo);
 
+//        if (resource instanceof UriResourceEntitySet) {
+//
+//        } else if () {
+//
+//        }
+    }
+
+    private void readEntities(ODataRequest oDataRequest, ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException {
+
+        List<UriResource> uriResourceParts = uriInfo.getUriResourceParts();
+        UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResourceParts.get(0);
+        EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
+        EdmEntityType edmEntityType = edmEntitySet.getEntityType();
+
+        SelectOption  selectOption  = uriInfo.getSelectOption();
+        ExpandOption  expandOption  = uriInfo.getExpandOption();
+        FilterOption  filterOption  = uriInfo.getFilterOption();
+        SkipOption    skipOption    = uriInfo.getSkipOption();
+        OrderByOption orderByOption = uriInfo.getOrderByOption();
+        CountOption   countOption   = uriInfo.getCountOption();
+        TopOption     topOption     = uriInfo.getTopOption();
+
+        Integer topMax = getSaturnEdmContext().getTOP_MAX_VALUE();
+        boolean count = countOption != null && countOption.getValue();
+
+        if (topOption == null && topMax != null) {
+            topOption = new TopOptionImpl().setValue(topMax);
+        } else if (topOption != null && topMax != null) {
+            topOption = ((TopOptionImpl) topOption).setValue(Math.min(topOption.getValue(), topMax));
+        }
+
+        String selects;
+
+        try {
+            selects = odata.createUriHelper().buildContextURLSelectList(edmEntityType, null, selectOption);
+        } catch (SerializerException e) {
+            throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+        EntityOperation entityOperation = entityOperationMap.get(edmEntityType.getName());
+        ExceptionUtils.assertNotNull(entityOperation, EntityOperation.class.getSimpleName(), edmEntityType.getName());
+
+        EntityCollection entityCollection = new EntityCollection();
+        List<Entity> resultEntities = entityCollection.getEntities();
+
+        Map<String, String> queryParams = new HashMap<>();
+
+        if (oDataRequest.getRawQueryPath() != null) {
+            Stream.of(oDataRequest.getRawQueryPath().split(StringUtils.AND)).forEach(param -> {
+                String[] kv = param.split(StringUtils.EQ);
+                String key = kv[0];
+                String value = kv[1];
+                queryParams.put(key, value);
+            });
+        }
+
+        if (!queryParams.containsKey(StringUtils.COUNT) && !queryParams.containsKey(StringUtils.COUNT_URL)) {
+            queryParams.put(StringUtils.COUNT, StringUtils.TRUE);
+        }
+
+        // todo
     }
 
     private UriResource getResourceFromUriInfo(UriInfo uriInfo) {

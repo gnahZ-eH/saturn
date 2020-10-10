@@ -41,6 +41,9 @@ public class QueryOptions {
     private int skip = 0;
     private int top = Integer.MAX_VALUE;
 
+    private boolean defaultSkip = true;
+    private boolean defaultTop = true;
+
     public QueryOptions(final ExpandOption expandOption, final FilterOption filterOption, final SelectOption selectOption, final OrderByOption orderByOption) {
         super();
         if (expandOption != null) {
@@ -103,5 +106,21 @@ public class QueryOptions {
 
     public void setTop(int top) {
         this.top = top;
+    }
+
+    public boolean isDefaultSkip() {
+        return defaultSkip;
+    }
+
+    public void setDefaultSkip(boolean defaultSkip) {
+        this.defaultSkip = defaultSkip;
+    }
+
+    public boolean isDefaultTop() {
+        return defaultTop;
+    }
+
+    public void setDefaultTop(boolean defaultTop) {
+        this.defaultTop = defaultTop;
     }
 }

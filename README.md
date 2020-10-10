@@ -14,5 +14,11 @@ Emoji |          |
 📑    | Config   |
  
 
-### 
+### Need to be improved
 CsdlParameter in getFunction could be collection
+
+
+### tips
+- should use entity type as main type, not use entity set 
+    - entityOperationMap.get(edmEntityType.getName());
+

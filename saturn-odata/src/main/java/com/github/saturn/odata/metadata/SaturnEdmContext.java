@@ -55,6 +55,9 @@ public class SaturnEdmContext {
     private String DEFAULT_EDM_PKG = null;
     private String CONTAINER_NAME = null;
     private String SERVICE_ROOT = null;
+    private Integer TOP_MAX_VALUE = 0;
+    private boolean DEFAULT_SKIP = true;
+    private boolean DEFAULT_TOP = true;
 
     private Map<String, Class<?>> entitySets      = new HashMap<>();
     private Map<String, Class<?>> enums           = new HashMap<>();
@@ -175,6 +178,30 @@ public class SaturnEdmContext {
 
     public void setServiceRoot(final String serviceRoot) {
         this.SERVICE_ROOT = serviceRoot;
+    }
+
+    public Integer getTOP_MAX_VALUE() {
+        return TOP_MAX_VALUE;
+    }
+
+    public void setTOP_MAX_VALUE(Integer TOP_MAX_VALUE) {
+        this.TOP_MAX_VALUE = TOP_MAX_VALUE;
+    }
+
+    public boolean isDEFAULT_SKIP() {
+        return DEFAULT_SKIP;
+    }
+
+    public void setDEFAULT_SKIP(boolean DEFAULT_SKIP) {
+        this.DEFAULT_SKIP = DEFAULT_SKIP;
+    }
+
+    public boolean isDEFAULT_TOP() {
+        return DEFAULT_TOP;
+    }
+
+    public void setDEFAULT_TOP(boolean DEFAULT_TOP) {
+        this.DEFAULT_TOP = DEFAULT_TOP;
     }
 
     public Map<String, Class<?>> getEntitySets() {
