@@ -58,6 +58,8 @@ import org.apache.olingo.server.api.processor.Processor;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceKind;
+import org.apache.olingo.server.api.uri.UriInfo;
+import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,9 +88,9 @@ public class SaturnProcessor implements Processor {
 
     private static final Logger LOG = LoggerFactory.getLogger(SaturnProcessor.class);
 
-    private OData odata;
-    private ServiceMetadata serviceMetadata;
-    private SaturnEdmContext saturnEdmContext;
+    protected OData odata;
+    protected ServiceMetadata serviceMetadata;
+    protected SaturnEdmContext saturnEdmContext;
 
     @Override
     public void init(final OData odata, final ServiceMetadata serviceMetadata) {
@@ -517,6 +519,10 @@ public class SaturnProcessor implements Processor {
             throw new SaturnODataException(HttpStatusCode.NOT_IMPLEMENTED, "Haven't implemented yet.");
         }
         return navigationEntitySet;
+    }
+
+    protected UriResource getResourceFromUriInfo(UriInfo uriInfo) {
+        return uriInfo.getUriResourceParts().get(uriInfo.getUriResourceParts().size() - 1);
     }
 
     public OData getOData() {

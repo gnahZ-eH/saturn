@@ -49,11 +49,11 @@ public interface EntityOperation {
         return retrieveByKey(parameterMap, null, null);
     }
 
-    Iterable<?> retrieveAll(QueryOptions queryOptions, Object superObject);
+    List<?> retrieveAll(QueryOptions queryOptions, Object superObject);
 
     Object update(Map<String, UriParameter> parameterMap, List<String> properties, Object object, Object superObject);
 
     Object delete(Map<String, UriParameter> parameterMap, Object superObject);
 
-    Long count(QueryOptions queryOptions, Object superObject);
+    Long count(QueryOptions queryOptions);
 }

@@ -100,9 +100,9 @@
         <module name="LocalFinalVariableName"/>
         <module name="LocalVariableName"/>
 <!--        <module name="MemberName"/>-->
-        <module name="MethodName"/>
+<!--        <module name="MethodName"/>-->
         <module name="PackageName"/>
-        <module name="ParameterName"/>
+<!--        <module name="ParameterName"/>-->
         <module name="StaticVariableName"/>
         <module name="TypeName"/>
 
@@ -117,7 +117,7 @@
 
         <!-- Checks for Size Violations.                    -->
         <!-- See https://checkstyle.org/config_sizes.html -->
-        <module name="MethodLength"/>
+<!--        <module name="MethodLength"/>-->
 <!--        <module name="ParameterNumber"/>-->
 
         <!-- Checks for whitespace                               -->
@@ -165,7 +165,7 @@
         <module name="FinalClass"/>
         <module name="HideUtilityClassConstructor"/>
         <module name="InterfaceIsType"/>
-        <module name="VisibilityModifier"/>
+<!--        <module name="VisibilityModifier"/>-->
 
         <!-- Miscellaneous other checks.                   -->
         <!-- See https://checkstyle.org/config_misc.html -->
