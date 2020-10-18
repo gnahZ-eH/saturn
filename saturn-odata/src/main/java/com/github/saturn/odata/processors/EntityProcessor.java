@@ -469,8 +469,4 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
             throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
-
-    private UriResource getResourceFromUriInfo(UriInfo uriInfo) {
-        return uriInfo.getUriResourceParts().get(uriInfo.getUriResourceParts().size() - 1);
-    }
 }
