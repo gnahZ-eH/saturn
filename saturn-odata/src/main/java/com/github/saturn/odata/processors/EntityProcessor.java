@@ -25,13 +25,13 @@
 package com.github.saturn.odata.processors;
 
 import com.github.saturn.odata.annotations.ODataEntityType;
-import com.github.saturn.odata.annotations.ODataFunction;
 import com.github.saturn.odata.exceptions.SaturnODataException;
 import com.github.saturn.odata.interfaces.CustomOperation;
 import com.github.saturn.odata.interfaces.EntityOperation;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.uri.QueryOptions;
 import com.github.saturn.odata.utils.ExceptionUtils;
+import com.github.saturn.odata.utils.ODataUtils;
 import com.github.saturn.odata.utils.StringUtils;
 
 import org.apache.olingo.commons.api.data.ContextURL;
@@ -88,21 +88,8 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
     private Map<String, CustomOperation<?>> functionMap;
 
     public EntityProcessor initialize(SaturnEdmContext saturnEdmContext, ApplicationContext applicationContext) {
-
         super.initialize(saturnEdmContext);
-        applicationContext
-                .getBeansOfType(EntityOperation.class)
-                .forEach((key, entityOperation) -> entityOperationMap.put(entityOperation.forEntity(), entityOperation));
-
-        applicationContext
-                .getBeansOfType(CustomOperation.class)
-                .forEach((key, customOperation) -> {
-                    ODataFunction oDataFunction = ((CustomOperation<?>) customOperation).getClass().getAnnotation(ODataFunction.class);
-                    if (oDataFunction != null) {
-                        String operationName = oDataFunction.name().isEmpty() ? ((CustomOperation<?>) customOperation).getClass().getSimpleName() : oDataFunction.name();
-                        functionMap.put(operationName, customOperation);
-                    }
-                });
+        ODataUtils.generateOperationMap(entityOperationMap, functionMap, applicationContext);
         return this;
     }
 
