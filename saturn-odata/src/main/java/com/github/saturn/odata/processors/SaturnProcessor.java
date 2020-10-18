@@ -87,8 +87,8 @@ public class SaturnProcessor implements Processor {
     private static final Logger LOG = LoggerFactory.getLogger(SaturnProcessor.class);
 
     protected OData odata;
-    private ServiceMetadata serviceMetadata;
-    private SaturnEdmContext saturnEdmContext;
+    protected ServiceMetadata serviceMetadata;
+    protected SaturnEdmContext saturnEdmContext;
 
     @Override
     public void init(final OData odata, final ServiceMetadata serviceMetadata) {

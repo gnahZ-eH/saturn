@@ -47,6 +47,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
     public static final String RIGHT_ANGLE_BRACKET = ">";
     public static final String DOLLAR = "$";
     public static final String BLANK = " ";
+    public static final String QUESTION_MARK = "?";
 
     //--------------------------------- FOR-URL-ENCODE ---------------------------------------
     public static final String BLANK_CODE = "%20";
@@ -78,5 +79,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
     public static boolean isNotNull(final String s) {
         return s != null;
+    }
+
+    public static boolean isNotEmpty(String s) {
+        return s != null && !s.isEmpty();
     }
 }

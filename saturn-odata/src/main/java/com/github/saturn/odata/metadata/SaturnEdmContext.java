@@ -180,27 +180,27 @@ public class SaturnEdmContext {
         this.SERVICE_ROOT = serviceRoot;
     }
 
-    public Integer getTOP_MAX_VALUE() {
+    public Integer getTopMaxValue() {
         return TOP_MAX_VALUE;
     }
 
-    public void setTOP_MAX_VALUE(Integer TOP_MAX_VALUE) {
+    public void setTopMaxValue(Integer TOP_MAX_VALUE) {
         this.TOP_MAX_VALUE = TOP_MAX_VALUE;
     }
 
-    public boolean isDEFAULT_SKIP() {
+    public boolean isDefaultSkip() {
         return DEFAULT_SKIP;
     }
 
-    public void setDEFAULT_SKIP(boolean DEFAULT_SKIP) {
+    public void setDefaultSkip(boolean DEFAULT_SKIP) {
         this.DEFAULT_SKIP = DEFAULT_SKIP;
     }
 
-    public boolean isDEFAULT_TOP() {
+    public boolean isDefaultTop() {
         return DEFAULT_TOP;
     }
 
-    public void setDEFAULT_TOP(boolean DEFAULT_TOP) {
+    public void setDefaultTop(boolean DEFAULT_TOP) {
         this.DEFAULT_TOP = DEFAULT_TOP;
     }
 

@@ -22,3 +22,9 @@ CsdlParameter in getFunction could be collection
 - should use entity type as main type, not use entity set 
     - entityOperationMap.get(edmEntityType.getName());
 
+### todo
+- need to implement other functions in EntityProcessor.readEntityCollection();
+
+class           |      |
+----------------|------|
+EntityProcessor | todo |

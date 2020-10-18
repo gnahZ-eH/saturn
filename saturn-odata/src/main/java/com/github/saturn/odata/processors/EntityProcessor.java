@@ -52,6 +52,7 @@ import org.apache.olingo.server.api.serializer.EntitySerializerOptions;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
 import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.api.serializer.SerializerResult;
+import org.apache.olingo.server.api.serializer.EntityCollectionSerializerOptions;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResource;
@@ -69,12 +70,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -228,7 +231,7 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
         String selects;
 
         try {
-            selects = getOData().createUriHelper().buildContextURLSelectList(edmEntityType, null, selectOption);
+            selects = odata.createUriHelper().buildContextURLSelectList(edmEntityType, null, selectOption);
         } catch (SerializerException e) {
             throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
@@ -255,7 +258,7 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
         try {
             contextURL = ContextURL
                     .with()
-                    .serviceRoot(new URI(getSaturnEdmContext().getServiceRoot()))
+                    .serviceRoot(new URI(saturnEdmContext.getServiceRoot()))
                     .entitySet(edmEntitySet)
                     .selectList(selects)
                     .suffix(ContextURL.Suffix.ENTITY)
@@ -275,7 +278,7 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
         SerializerResult serializerResult;
 
         try {
-            oDataSerializer = getOData().createSerializer(contentType);
+            oDataSerializer = odata.createSerializer(contentType);
             serializerResult = oDataSerializer.entity(getServiceMetadata(), edmEntityType, entity, serializerOptions);
         } catch (SerializerException e) {
             throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -305,14 +308,19 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
     public void readEntityCollection(ODataRequest oDataRequest, ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws ODataApplicationException, ODataLibraryException {
         UriResource resource = getResourceFromUriInfo(uriInfo);
 
-//        if (resource instanceof UriResourceEntitySet) {
-//
-//        } else if () {
-//
-//        }
+        if (resource instanceof UriResourceEntitySet) {
+            try {
+                readEntities(oDataRequest, oDataResponse, uriInfo, contentType);
+            } catch (SaturnODataException e) {
+                LOG.error(e.getMessage());
+            }
+        } else {
+            // todo
+            throw new ODataApplicationException("Haven't been implemented yet.", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+        }
     }
 
-    private void readEntities(ODataRequest oDataRequest, ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException {
+    private void readEntities(ODataRequest oDataRequest, ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException, SerializerException {
 
         List<UriResource> uriResourceParts = uriInfo.getUriResourceParts();
         UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResourceParts.get(0);
@@ -327,7 +335,7 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
         CountOption   countOption   = uriInfo.getCountOption();
         TopOption     topOption     = uriInfo.getTopOption();
 
-        Integer topMax = getSaturnEdmContext().getTOP_MAX_VALUE();
+        Integer topMax = saturnEdmContext.getTopMaxValue();
         boolean count = countOption != null && countOption.getValue();
 
         if (topOption == null && topMax != null) {
@@ -351,6 +359,7 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
         List<Entity> resultEntities = entityCollection.getEntities();
 
         Map<String, String> queryParams = new HashMap<>();
+        String requestPath = oDataRequest.getRawBaseUri() + oDataRequest.getRawODataPath();
 
         if (oDataRequest.getRawQueryPath() != null) {
             Stream.of(oDataRequest.getRawQueryPath().split(StringUtils.AND)).forEach(param -> {
@@ -365,7 +374,113 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
             queryParams.put(StringUtils.COUNT, StringUtils.TRUE);
         }
 
-        // todo
+        queryParams.remove(StringUtils.SKIP);
+        queryParams.remove(StringUtils.SKIP_URL);
+
+        //--------------------------------- Build query option and do query ---------------------------------------
+        QueryOptions queryOptions = new QueryOptions(expandOption, filterOption, null, orderByOption);
+        queryOptions.setDefaultSkip(saturnEdmContext.isDefaultSkip());
+        queryOptions.setDefaultTop(saturnEdmContext.isDefaultTop());
+
+        if (skipOption != null) {
+            queryOptions.setSkip(skipOption.getValue());
+        }
+
+        if (topOption != null) {
+            queryOptions.setTop(topOption.getValue());
+        }
+
+        List<?> objects = entityOperation.retrieveAll(queryOptions, null);
+
+        if (count) {
+            entityCollection.setCount(objects.size());
+        }
+
+        //--------------------------------- Set skip option ---------------------------------------
+        if (skipOption != null) {
+            if (saturnEdmContext.isDefaultSkip()) {
+                objects = objects.subList(skipOption.getValue(), objects.size() - 1);
+            }
+            queryParams.put(StringUtils.SKIP, String.valueOf(skipOption.getValue() + (topMax != null ? topMax : 0)));
+        } else {
+            queryParams.put(StringUtils.SKIP, String.valueOf(topMax != null ? topMax : 0));
+        }
+
+        //--------------------------------- Generate next link ---------------------------------------
+        List<String> queryParamsList = new ArrayList<>();
+        queryParams.forEach((key, value) -> queryParamsList.add(key + StringUtils.EQ + value));
+        String nextLink = String.join(StringUtils.AND, queryParamsList);
+
+        if (StringUtils.isNotEmpty(nextLink)) {
+            nextLink = requestPath + StringUtils.QUESTION_MARK + nextLink;
+        }
+
+        //--------------------------------- Set top option ---------------------------------------
+        if (topOption != null) {
+            if (saturnEdmContext.isDefaultTop()) {
+                if (objects.size() <= topOption.getValue()) {
+                    nextLink = null;
+                }
+                objects = objects.subList(0, topOption.getValue());
+            } else {
+                long allCount = entityOperation.count(queryOptions);
+                if (allCount - (skipOption == null ? 0 : skipOption.getValue()) <= topOption.getValue()) {
+                    nextLink = null;
+                }
+            }
+        }
+
+        //--------------------------------- trans to entity ---------------------------------------
+        for (Object o : objects) {
+            try {
+                Entity entity = fromObject2Entity(o, expandOption);
+                resultEntities.add(entity);
+            } catch (SaturnODataException | IllegalAccessException e) {
+                throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
+            }
+        }
+
+        //--------------------------------------------------------------------------------------
+        ODataSerializer oDataSerializer = odata.createSerializer(contentType);
+        ContextURL contextURL;
+
+        try {
+            if (nextLink != null) {
+
+                    entityCollection.setNext(new URI(nextLink));
+
+            }
+            contextURL = ContextURL
+                    .with()
+                    .entitySet(edmEntitySet)
+                    .selectList(selects)
+                    .serviceRoot(new URI(saturnEdmContext.getServiceRoot()))
+                    .build();
+        } catch (URISyntaxException e) {
+            throw new SaturnODataException(HttpStatusCode.BAD_REQUEST, e.getMessage());
+        }
+
+        EntityCollectionSerializerOptions entityCollectionSerializerOptions = EntityCollectionSerializerOptions
+                .with()
+                .id(requestPath)
+                .contextURL(contextURL)
+                .count(countOption)
+                .select(selectOption)
+                .expand(expandOption)
+                .build();
+
+        try {
+            SerializerResult serializerResult = oDataSerializer.entityCollection(serviceMetadata, edmEntityType, entityCollection, entityCollectionSerializerOptions);
+            InputStream serializedContent = serializerResult.getContent();
+
+            oDataResponse.setContent(serializedContent);
+            oDataResponse.setStatusCode(HttpStatusCode.OK.getStatusCode());
+            oDataResponse.setHeader(HttpHeader.CONTENT_TYPE, contentType.toContentTypeString());
+
+        } catch (SerializerException e) {
+            LOG.error(e.getMessage(), e);
+            throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     private UriResource getResourceFromUriInfo(UriInfo uriInfo) {
