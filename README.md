@@ -28,3 +28,4 @@ CsdlParameter in getFunction could be collection
 class           |      |
 ----------------|------|
 EntityProcessor | todo |
+PrimitiveProcessor| todo|

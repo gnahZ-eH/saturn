@@ -393,9 +393,7 @@ public class EntityProcessor extends BaseTypeProcessor implements org.apache.oli
 
         try {
             if (nextLink != null) {
-
-                    entityCollection.setNext(new URI(nextLink));
-
+                entityCollection.setNext(new URI(nextLink));
             }
             contextURL = ContextURL
                     .with()
