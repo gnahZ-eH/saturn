@@ -26,12 +26,10 @@ package com.github.saturn.odata.processors;
 
 import com.github.saturn.odata.annotations.ODataEntityType;
 import com.github.saturn.odata.exceptions.SaturnODataException;
-import com.github.saturn.odata.interfaces.CustomOperation;
 import com.github.saturn.odata.interfaces.EntityOperation;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.uri.QueryOptions;
 import com.github.saturn.odata.utils.ExceptionUtils;
-import com.github.saturn.odata.utils.ODataUtils;
 import com.github.saturn.odata.utils.StringUtils;
 
 import org.apache.olingo.commons.api.data.ContextURL;
@@ -54,7 +52,6 @@ import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.api.serializer.SerializerResult;
 import org.apache.olingo.server.api.serializer.EntityCollectionSerializerOptions;
 import org.apache.olingo.server.api.uri.UriInfo;
-import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceNavigation;
@@ -78,18 +75,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class EntityProcessor extends SaturnProcessor implements org.apache.olingo.server.api.processor.EntityProcessor, EntityCollectionProcessor {
+public class EntityProcessor extends BaseTypeProcessor implements org.apache.olingo.server.api.processor.EntityProcessor, EntityCollectionProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityProcessor.class);
-    private Map<String, EntityOperation> entityOperationMap;
-    private Map<String, CustomOperation<?>> functionMap;
 
     public EntityProcessor initialize(SaturnEdmContext saturnEdmContext, ApplicationContext applicationContext) {
         super.initialize(saturnEdmContext);
-        ODataUtils.generateOperationMap(entityOperationMap, functionMap, applicationContext);
+        super.generateOperationMap(entityOperationMap, functionMap, applicationContext);
         return this;
     }
 
@@ -149,7 +143,7 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
         EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
         EdmEntityType edmEntityType = edmEntitySet.getEntityType();
 
-        Object superObject = readByEntityOperation(uriResourceEntitySet);
+        Object superObject = super.readByEntityOperation(uriResourceEntitySet);
         ExceptionUtils.assertNotNull(superObject, ODataEntityType.class.getSimpleName());
 
         // navi part
@@ -166,40 +160,6 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
                 uriResourceNavigation,
                 superObject,
                 true);
-    }
-
-    private Object readByEntityOperation(UriResourceNavigation uriResourceNavigation, EdmEntitySet edmEntitySet, Object superObject, SelectOption selectOption, ExpandOption expandOption) throws SaturnODataException {
-
-        // can also use EntitySet
-        // todo need to test here
-        EdmEntityType edmEntityType = edmEntitySet.getEntityType();
-        EntityOperation entityOperation = entityOperationMap.get(edmEntityType.getName());
-
-        ExceptionUtils.assertNotNull(entityOperation, EntityOperation.class.getSimpleName(), edmEntityType.getName());
-        List<UriParameter> parameters = uriResourceNavigation.getKeyPredicates();
-        Map<String, UriParameter> parameterMap = parameters.stream().collect(Collectors.toMap(UriParameter::getName, p -> p));
-        QueryOptions queryOptions = new QueryOptions(expandOption, null, selectOption, null);
-
-        return entityOperation.retrieveByKey(parameterMap, queryOptions, superObject);
-    }
-
-    private Object readByEntityOperation(UriResourceEntitySet uriResourceEntitySet, SelectOption selectOption, ExpandOption expandOption) throws SaturnODataException {
-
-        // can also use EntitySet
-        // todo need to test here
-        EdmEntityType edmEntityType = uriResourceEntitySet.getEntityType();
-        EntityOperation entityOperation = entityOperationMap.get(edmEntityType.getName());
-
-        ExceptionUtils.assertNotNull(entityOperation, EntityOperation.class.getSimpleName(), edmEntityType.getName());
-        List<UriParameter> parameters = uriResourceEntitySet.getKeyPredicates();
-        Map<String, UriParameter> parameterMap = parameters.stream().collect(Collectors.toMap(UriParameter::getName, p -> p));
-        QueryOptions queryOptions = new QueryOptions(expandOption, null, selectOption, null);
-
-        return entityOperation.retrieveByKey(parameterMap, queryOptions, null);
-    }
-
-    private Object readByEntityOperation(UriResourceEntitySet uriResourceEntitySet) throws SaturnODataException {
-        return readByEntityOperation(uriResourceEntitySet, null, null);
     }
 
     private void processReadEntity(
@@ -227,9 +187,9 @@ public class EntityProcessor extends SaturnProcessor implements org.apache.oling
         Object object;
 
         if (isNavi) {
-            object = readByEntityOperation(uriResourceNavigation, edmEntitySet, superObject, selectOption, expandOption);
+            object = super.readByEntityOperation(uriResourceNavigation, edmEntitySet, superObject, selectOption, expandOption);
         } else {
-            object = readByEntityOperation(uriResourceEntitySet, selectOption, expandOption);
+            object = super.readByEntityOperation(uriResourceEntitySet, selectOption, expandOption);
         }
 
         ExceptionUtils.assertNotNull(object, ODataEntityType.class.getSimpleName());

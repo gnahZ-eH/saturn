@@ -35,8 +35,6 @@ import com.github.saturn.odata.annotations.ODataEnumType;
 import com.github.saturn.odata.annotations.ODataComplexType;
 import com.github.saturn.odata.annotations.ODataAction;
 import com.github.saturn.odata.exceptions.SaturnODataException;
-import com.github.saturn.odata.interfaces.CustomOperation;
-import com.github.saturn.odata.interfaces.EntityOperation;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.enums.PrimitiveType;
 
@@ -49,7 +47,6 @@ import org.apache.olingo.commons.api.edm.provider.CsdlFunction;
 import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
 import org.apache.olingo.commons.api.edm.provider.CsdlParameter;
 import org.apache.olingo.commons.api.edm.provider.CsdlAction;
-import org.springframework.context.ApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -551,23 +548,5 @@ public final class ODataUtils {
         entityId = StringUtils.replace(entityId, StringUtils.RIGHT_ANGLE_BRACKET, StringUtils.RIGHT_ANGLE_BRACKET_CODE);
         entityId = StringUtils.replace(entityId, StringUtils.BLANK, StringUtils.BLANK_CODE);
         return entityId;
-    }
-
-    public static void generateOperationMap(Map<String, EntityOperation> entityOperationMap,
-                                            Map<String, CustomOperation<?>> functionMap,
-                                            ApplicationContext applicationContext) {
-        applicationContext
-                .getBeansOfType(EntityOperation.class)
-                .forEach((key, entityOperation) -> entityOperationMap.put(entityOperation.forEntity(), entityOperation));
-
-        applicationContext
-                .getBeansOfType(CustomOperation.class)
-                .forEach((key, customOperation) -> {
-                    ODataFunction oDataFunction = ((CustomOperation<?>) customOperation).getClass().getAnnotation(ODataFunction.class);
-                    if (oDataFunction != null) {
-                        String operationName = oDataFunction.name().isEmpty() ? ((CustomOperation<?>) customOperation).getClass().getSimpleName() : oDataFunction.name();
-                        functionMap.put(operationName, customOperation);
-                    }
-                });
     }
 }

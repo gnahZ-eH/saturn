@@ -24,10 +24,8 @@
 
 package com.github.saturn.odata.processors;
 
-import com.github.saturn.odata.interfaces.CustomOperation;
-import com.github.saturn.odata.interfaces.EntityOperation;
+import com.github.saturn.odata.exceptions.SaturnODataException;
 import com.github.saturn.odata.metadata.SaturnEdmContext;
-import com.github.saturn.odata.utils.ODataUtils;
 
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
@@ -47,17 +45,13 @@ import org.springframework.context.ApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
-public class PrimitiveProcessor extends SaturnProcessor implements org.apache.olingo.server.api.processor.PrimitiveProcessor, PrimitiveCollectionProcessor {
+public class PrimitiveProcessor extends BaseTypeProcessor implements org.apache.olingo.server.api.processor.PrimitiveProcessor, PrimitiveCollectionProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(PrimitiveProcessor.class);
-    private Map<String, EntityOperation> entityOperationMap;
-    private Map<String, CustomOperation<?>> functionMap;
 
     public PrimitiveProcessor initialize(SaturnEdmContext saturnEdmContext, ApplicationContext applicationContext) {
         super.initialize(saturnEdmContext);
-        ODataUtils.generateOperationMap(entityOperationMap, functionMap, applicationContext);
+        super.generateOperationMap(entityOperationMap, functionMap, applicationContext);
         return this;
     }
 
@@ -67,7 +61,7 @@ public class PrimitiveProcessor extends SaturnProcessor implements org.apache.ol
 
     }
 
-    private void readPrimitive(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) {
+    private void readPrimitive(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException {
         UriResource resource = getResourceFromUriInfo(uriInfo);
         UriResourceProperty uriResourceProperty = (UriResourceProperty) resource;
         EdmProperty edmProperty = uriResourceProperty.getProperty();
@@ -76,17 +70,13 @@ public class PrimitiveProcessor extends SaturnProcessor implements org.apache.ol
 
         // pre-last segment should be an entity type
         UriResource preResource = uriInfo.getUriResourceParts().get(uriInfo.getUriResourceParts().size() - 2);
-        EdmEntitySet edmEntitySet = ((UriResourceEntitySet) preResource).getEntitySet();
+        UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) preResource;
+        EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 
         //--------------------------------- Read Entity ---------------------------------------
         Entity entity;
-        Object object = readEntity(edmEntitySet);
+        Object object = super.readByEntityOperation(uriResourceEntitySet);
         // todo
-    }
-
-    private Object readEntity(EdmEntitySet edmEntitySet) {
-        // todo
-        return null;
     }
 
     @Override
