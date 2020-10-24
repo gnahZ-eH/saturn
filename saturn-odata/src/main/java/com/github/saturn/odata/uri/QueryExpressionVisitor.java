@@ -24,9 +24,13 @@
 
 package com.github.saturn.odata.uri;
 
+import com.github.saturn.odata.annotations.ODataEntityType;
+
 import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.dsl.PathBuilder;
 import org.apache.olingo.commons.api.edm.EdmEnumType;
 import org.apache.olingo.server.api.ODataApplicationException;
+import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.queryoption.expression.ExpressionVisitException;
 import org.apache.olingo.server.api.uri.queryoption.expression.Member;
 
@@ -43,6 +47,12 @@ public class QueryExpressionVisitor extends AbstractExpressionVisitor {
 
     @Override
     public Expression<?> visitMember(Member member) throws ExpressionVisitException, ODataApplicationException {
+
+        UriInfoResource uriInfoResource = member.getResourcePath();
+        ODataEntityType oDataEntityType = entityClass.getAnnotation(ODataEntityType.class);
+        PathBuilder<?> pathBuilder = new PathBuilder<>(oDataEntityType.jpaEntity(), oDataEntityType.jpaVariable());
+        // todo
+
         return null;
     }
 

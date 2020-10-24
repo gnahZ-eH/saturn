@@ -101,4 +101,13 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
         return text.substring(first, last + 1);
     }
+
+    public static String first2LowerCase(String s) {
+        if (isNotEmpty(s)) {
+            char[] chars = s.toCharArray();
+            chars[0] = Character.toLowerCase(chars[0]);
+            return new String(chars);
+        }
+        return s;
+    }
 }
