@@ -84,4 +84,21 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
     public static boolean isNotEmpty(String s) {
         return s != null && !s.isEmpty();
     }
+
+    public static String trimByChar(String text, char c) {
+        int len = text.length();
+
+        int first = 0;
+        while (first < len && text.charAt(first) == c) {
+            first++;
+        }
+
+        int last = len - 1;
+
+        while (last > first && text.charAt(last) == c) {
+            last--;
+        }
+
+        return text.substring(first, last + 1);
+    }
 }
