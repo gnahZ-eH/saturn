@@ -38,7 +38,9 @@ import com.querydsl.core.types.dsl.EnumPath;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.BooleanOperation;
+import org.apache.olingo.commons.api.edm.EdmEnumType;
 import org.apache.olingo.commons.api.edm.EdmType;
+import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.queryoption.expression.BinaryOperatorKind;
 import org.apache.olingo.server.api.uri.queryoption.expression.UnaryOperatorKind;
@@ -46,14 +48,16 @@ import org.apache.olingo.server.api.uri.queryoption.expression.MethodKind;
 import org.apache.olingo.server.api.uri.queryoption.expression.Literal;
 import org.apache.olingo.server.api.uri.queryoption.expression.Member;
 import org.apache.olingo.server.api.uri.queryoption.expression.ExpressionVisitException;
+import org.apache.olingo.server.api.uri.queryoption.expression.ExpressionVisitor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
-public abstract class ExpressionVisitor implements org.apache.olingo.server.api.uri.queryoption.expression.ExpressionVisitor<Expression<?>> {
+public abstract class AbstractExpressionVisitor implements ExpressionVisitor<Expression<?>> {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
@@ -162,12 +166,32 @@ public abstract class ExpressionVisitor implements org.apache.olingo.server.api.
 
     @Override
     public Expression<?> visitMethodCall(MethodKind methodKind, List<Expression<?>> list) throws ExpressionVisitException, ODataApplicationException {
-        return null;
+        throw new ODataApplicationException("Haven't been implemented yet.", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
     }
 
     @Override
     public Expression<?> visitLambdaExpression(String s, String s1, org.apache.olingo.server.api.uri.queryoption.expression.Expression expression) throws ExpressionVisitException, ODataApplicationException {
-        return null;
+        throw new ODataApplicationException("Haven't been implemented yet.", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+    }
+
+    @Override
+    public Expression<?> visitAlias(String s) throws ExpressionVisitException, ODataApplicationException {
+        throw new ODataApplicationException("Haven't been implemented yet.", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+    }
+
+    @Override
+    public Expression<?> visitTypeLiteral(EdmType edmType) throws ExpressionVisitException, ODataApplicationException {
+        throw new ODataApplicationException("Haven't been implemented yet.", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+    }
+
+    @Override
+    public Expression<?> visitLambdaReference(String s) throws ExpressionVisitException, ODataApplicationException {
+        throw new ODataApplicationException("Haven't been implemented yet.", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
+    }
+
+    @Override
+    public Expression<?> visitBinaryOperator(BinaryOperatorKind binaryOperatorKind, Expression<?> expression, List<Expression<?>> list) throws ExpressionVisitException, ODataApplicationException {
+        throw new ODataApplicationException("Haven't been implemented yet.", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
     }
 
     @Override
@@ -203,7 +227,8 @@ public abstract class ExpressionVisitor implements org.apache.olingo.server.api.
     }
 
     @Override
-    public Expression<?> visitMember(Member member) throws ExpressionVisitException, ODataApplicationException {
-        return null;
-    }
+    public abstract Expression<?> visitMember(Member member) throws ExpressionVisitException, ODataApplicationException;
+
+    @Override
+    public abstract Expression<?> visitEnum(EdmEnumType edmEnumType, List<String> list) throws ExpressionVisitException, ODataApplicationException;
 }
