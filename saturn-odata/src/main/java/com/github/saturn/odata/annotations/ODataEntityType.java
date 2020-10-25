@@ -75,4 +75,24 @@ public @interface ODataEntityType {
      * @return keys of the EntityType.
      */
     String[] keys() default { };
+
+    /**
+     * For JPA entity, since the jpa entity and edm entity are combine with each other
+     * So this value should always be the Class with this annotation.
+     * @return entity of edm(jpa).
+     */
+    Class<?> jpaEntity() default Object.class;
+
+    /**
+     * The variable of edm(jpa) entity, default change the first letter of entity class to lower case.
+     * @return variable of edm(jpa) entity.
+     */
+    String jpaVariable() default "";
+
+    /**
+     * One ODataEntityType may extend another ODataEntityType.
+     * In JPA entity, should have one field of this ODataEntityType.
+     * @return the field name of the extended edm(jpa) entity.
+     */
+    String superEntityName() default "";
 }

@@ -24,7 +24,10 @@ CsdlParameter in getFunction could be collection
 
 ### todo
 - need to implement other functions in EntityProcessor.readEntityCollection();
+- should have OdataEnum interface or not;
 
 class           |      |
 ----------------|------|
 EntityProcessor | todo |
+PrimitiveProcessor| todo |
+ExpressionVisitor.visitBinaryOperator|todo|

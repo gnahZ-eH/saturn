@@ -51,6 +51,17 @@ public enum PrimitiveType {
     public static final Map<String, Class<?>> BT_BY_PT_NAME = new HashMap<>();
     public static final Map<Class<?>, PrimitiveType> PT_BY_BT = new HashMap<>();
 
+    public static final String BYTE      = "SByte";
+    public static final String INT16     = "Int16";
+    public static final String INT32     = "Int32";
+    public static final String INT64     = "Int64";
+    public static final String STRING    = "String";
+    public static final String DATE      = "Date";
+    public static final String DECIMAL   = "Decimal";
+    public static final String DOUBLE    = "Double";
+    public static final String BOOLEAN   = "Boolean";
+    public static final String DATE_TIME = "DateTimeOffset";
+
     static {
         EDM_PT_BY_NAME.put(EDM_BYTE.type,      EdmPrimitiveTypeKind.SByte);
         EDM_PT_BY_NAME.put(EDM_INT16.type,     EdmPrimitiveTypeKind.Int16);
@@ -111,5 +122,9 @@ public enum PrimitiveType {
 
     public String getType() {
         return type;
+    }
+
+    public String getBaseType() {
+        return type.split("\\.")[1];
     }
 }

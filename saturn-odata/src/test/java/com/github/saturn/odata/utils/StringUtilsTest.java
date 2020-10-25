@@ -41,4 +41,23 @@ class StringUtilsTest {
         assertFalse(StringUtils.equals(s3, s1));
         assertTrue(StringUtils.equals(null, null));
     }
+
+    @Test
+    void testFirst2LowerCase() {
+        String s = "ABCD";
+        String t = "aBCD";
+        assertEquals(StringUtils.first2LowerCase(s), t);
+
+        String s1 = "";
+        String t1 = "";
+        assertEquals(StringUtils.first2LowerCase(s1), t1);
+
+        String s2 = "abcd";
+        String t2 = "abcd";
+        assertEquals(StringUtils.first2LowerCase(s2), t2);
+
+        String s3 = "a";
+        String t3 = "a";
+        assertEquals(StringUtils.first2LowerCase(s3), t3);
+    }
 }

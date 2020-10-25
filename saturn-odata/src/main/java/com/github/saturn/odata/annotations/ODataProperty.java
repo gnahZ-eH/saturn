@@ -153,4 +153,10 @@ public @interface ODataProperty {
      * If no value is specified, the Unicode facet defaults to true.
      */
     boolean unicode() default true;
+
+    /**
+     * The variable of edm(jpa) entity, default should be self with this annotation and equal to name().
+     * @return variable of edm(jpa) entity.
+     */
+    String jpaVariable() default "";
 }

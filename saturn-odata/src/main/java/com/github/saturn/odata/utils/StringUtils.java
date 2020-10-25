@@ -48,6 +48,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
     public static final String DOLLAR = "$";
     public static final String BLANK = " ";
     public static final String QUESTION_MARK = "?";
+    public static final String POINT = ".";
 
     //--------------------------------- FOR-URL-ENCODE ---------------------------------------
     public static final String BLANK_CODE = "%20";
@@ -83,5 +84,31 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
     public static boolean isNotEmpty(String s) {
         return s != null && !s.isEmpty();
+    }
+
+    public static String trimByChar(String text, char c) {
+        int len = text.length();
+
+        int first = 0;
+        while (first < len && text.charAt(first) == c) {
+            first++;
+        }
+
+        int last = len - 1;
+
+        while (last > first && text.charAt(last) == c) {
+            last--;
+        }
+
+        return text.substring(first, last + 1);
+    }
+
+    public static String first2LowerCase(String s) {
+        if (isNotEmpty(s)) {
+            char[] chars = s.toCharArray();
+            chars[0] = Character.toLowerCase(chars[0]);
+            return new String(chars);
+        }
+        return s;
     }
 }
