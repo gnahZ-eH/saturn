@@ -48,6 +48,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
     public static final String DOLLAR = "$";
     public static final String BLANK = " ";
     public static final String QUESTION_MARK = "?";
+    public static final String POINT = ".";
 
     //--------------------------------- FOR-URL-ENCODE ---------------------------------------
     public static final String BLANK_CODE = "%20";

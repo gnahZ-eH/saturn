@@ -88,4 +88,11 @@ public @interface ODataEntityType {
      * @return variable of edm(jpa) entity.
      */
     String jpaVariable() default "";
+
+    /**
+     * One ODataEntityType may extend another ODataEntityType.
+     * In JPA entity, should have one field of this ODataEntityType.
+     * @return the field name of the extended edm(jpa) entity.
+     */
+    String superEntityName() default "";
 }

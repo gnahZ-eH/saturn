@@ -24,6 +24,9 @@
 
 package com.github.saturn.odata.utils;
 
+import com.github.saturn.odata.annotations.ODataNavigationProperty;
+import com.github.saturn.odata.annotations.ODataProperty;
+
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
@@ -50,6 +53,23 @@ public final class ClassUtils {
             }
         }
         return fields;
+    }
+
+    public static Field getFieldFromEdmClass(Class<?> edmClass, String propertyName) {
+        List<Field> fields = getFields(edmClass);
+        for (Field field : fields) {
+            ODataProperty oDataProperty = field.getAnnotation(ODataProperty.class);
+            ODataNavigationProperty oDataNavigationProperty = field.getAnnotation(ODataNavigationProperty.class);
+            if ((oDataProperty == null && field.getName().equals(propertyName))
+                    || (oDataProperty != null && !oDataProperty.name().isEmpty() && oDataProperty.name().equals(propertyName))
+                    || (oDataProperty != null && oDataProperty.name().isEmpty() && field.getName().equals(propertyName))
+                    || (oDataNavigationProperty == null && field.getName().equals(propertyName))
+                    || (oDataNavigationProperty != null && !oDataNavigationProperty.name().isEmpty() && oDataNavigationProperty.name().equals(propertyName))
+                    || (oDataNavigationProperty != null && oDataNavigationProperty.name().isEmpty() && field.getName().equals(propertyName))) {
+                return field;
+            }
+        }
+        return null;
     }
 
     public static ClassPathScanningCandidateComponentProvider createComponentScanner(final Iterable<Class<? extends Annotation>> annotations) {
