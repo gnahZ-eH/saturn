@@ -28,16 +28,15 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
     private StringUtils() { }
 
+    //--------------------------------- OData ------------------------------------------------
     public static final String COLLECTION_QUALIFIED_NAME = "Collection(%s.%s)";
-
     public static final String COLLECTION = "Collection";
-
     public static final String COLLECTION_QUALIFIED_FULL_NAME = "Collection(%s)";
-
     public static final String FQN = "%s.%s";
 
     //--------------------------------- REG --------------------------------------------------
     public static final String REGEX_DATE_FORMAT = "\\d{4}-\\d{2}-\\d{2}";
+    public static final String REGEX_POINT = "\\.";
 
     //--------------------------------- BASE-SYMBOL ------------------------------------------
     public static final String COMMA = ",";
