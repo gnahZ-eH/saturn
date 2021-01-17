@@ -111,4 +111,10 @@ public @interface ODataNavigationProperty {
      * @return entity of edm(jpa).
      */
     Class<?> jpaEntity() default Object.class;
+
+    /**
+     * The variable of edm(jpa) entity, default change the first letter of entity class to lower case.
+     * @return variable of edm(jpa) entity.
+     */
+    String jpaVariable() default "";
 }

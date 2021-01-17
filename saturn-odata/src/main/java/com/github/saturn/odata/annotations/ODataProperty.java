@@ -159,4 +159,11 @@ public @interface ODataProperty {
      * @return variable of edm(jpa) entity.
      */
     String jpaVariable() default "";
+
+    /**
+     * For JPA entity, since the jpa entity and edm entity are combine with each other
+     * So this value should always be the value type with this annotation.
+     * @return entity of edm(jpa).
+     */
+    Class<?> jpaEntity() default Object.class;
 }
