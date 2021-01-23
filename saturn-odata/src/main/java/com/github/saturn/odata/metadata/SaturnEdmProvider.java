@@ -72,10 +72,10 @@ public class SaturnEdmProvider extends CsdlAbstractEdmProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(SaturnEdmProvider.class);
 
-    private SaturnEdmContext context = new SaturnEdmContext();
+    private SaturnEdmContext context;
 
-    public SaturnEdmProvider initialize() throws ODataApplicationException {
-        context.initialize();
+    public SaturnEdmProvider initialize(SaturnEdmContext context) throws ODataApplicationException {
+        this.context = context;
         return this;
     }
 
