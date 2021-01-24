@@ -26,17 +26,22 @@ package com.github.saturn.example.configs;
 
 import com.github.saturn.odata.metadata.SaturnEdmContext;
 import com.github.saturn.odata.metadata.SaturnEdmProvider;
+import com.github.saturn.odata.processors.EntityProcessor;
 import com.github.saturn.odata.processors.PrimitiveProcessor;
+import com.github.saturn.example.controllers.SaturnServlet;
 
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class SaturnConfig {
+public class SaturnConfig implements WebMvcConfigurer {
 
     @Value("${saturn.service-root}")
     private String SERVICE_ROOT;
@@ -56,8 +61,8 @@ public class SaturnConfig {
     @Autowired
     private SaturnEdmContext saturnEdmContext;
 
-
-
+    @Autowired
+    private SaturnServlet dispatcherServlet;
 
     @Bean
     public PrimitiveProcessor getPrimitiveProcessor() throws ODataApplicationException {
@@ -79,5 +84,21 @@ public class SaturnConfig {
     public SaturnEdmProvider getSaturnEdmProvider() throws ODataApplicationException {
         return new SaturnEdmProvider()
                 .initialize(saturnEdmContext);
+    }
+
+    @Bean
+    public EntityProcessor getEntityProcessor() {
+        return new EntityProcessor()
+                .initialize(saturnEdmContext, applicationContext);
+    }
+
+    @Bean
+    public ServletRegistrationBean<SaturnServlet> servletRegistrationBean() {
+        return new ServletRegistrationBean<>(dispatcherServlet, "/saturn-odata/*");
+    }
+
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.setUseRegisteredSuffixPatternMatch(true);
     }
 }

@@ -25,6 +25,7 @@
 package com.github.saturn.example.controllers;
 
 import com.github.saturn.odata.metadata.SaturnEdmProvider;
+import com.github.saturn.odata.processors.EntityProcessor;
 import com.github.saturn.odata.processors.PrimitiveProcessor;
 
 import org.apache.olingo.server.api.OData;
@@ -40,13 +41,16 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 
 @Component
-public class SaturnController extends HttpServlet {
+public class SaturnServlet extends HttpServlet {
 
     @Autowired
     private SaturnEdmProvider saturnEdmProvider;
 
     @Autowired
     private PrimitiveProcessor primitiveProcessor;
+
+    @Autowired
+    private EntityProcessor entityProcessor;
 
     public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         try {
@@ -55,6 +59,7 @@ public class SaturnController extends HttpServlet {
             ODataHttpHandler handler = odata.createHandler(metadata);
 
             handler.register(primitiveProcessor);
+            handler.register(entityProcessor);
 
             handler.process(request, response);
         } catch (RuntimeException e) {
