@@ -152,56 +152,63 @@ public class SaturnEdmContext {
         return NAME_SPACE;
     }
 
-    public void setNameSpace(final String nameSpace) {
+    public SaturnEdmContext setNameSpace(final String nameSpace) {
         this.NAME_SPACE = nameSpace;
+        return this;
     }
 
     public String getDefaultEdmPkg() {
         return DEFAULT_EDM_PKG;
     }
 
-    public void setDefaultEdmPkg(final String defaultEdmPkg) {
+    public SaturnEdmContext setDefaultEdmPkg(final String defaultEdmPkg) {
         this.DEFAULT_EDM_PKG = defaultEdmPkg;
+        return this;
     }
 
     public String getContainerName() {
         return CONTAINER_NAME;
     }
 
-    public void setContainerName(final String containerName) {
+    public SaturnEdmContext setContainerName(final String containerName) {
         this.CONTAINER_NAME = containerName;
+        return this;
     }
 
     public String getServiceRoot() {
         return SERVICE_ROOT;
     }
 
-    public void setServiceRoot(final String serviceRoot) {
+    public SaturnEdmContext setServiceRoot(final String serviceRoot) {
         this.SERVICE_ROOT = serviceRoot;
+        return this;
     }
 
     public Integer getTopMaxValue() {
         return TOP_MAX_VALUE;
     }
 
-    public void setTopMaxValue(Integer TOP_MAX_VALUE) {
+    public SaturnEdmContext setTopMaxValue(Integer TOP_MAX_VALUE) {
         this.TOP_MAX_VALUE = TOP_MAX_VALUE;
+        return this;
     }
 
     public boolean isDefaultSkip() {
         return DEFAULT_SKIP;
     }
 
-    public void setDefaultSkip(boolean DEFAULT_SKIP) {
+    public SaturnEdmContext setDefaultSkip(boolean DEFAULT_SKIP) {
         this.DEFAULT_SKIP = DEFAULT_SKIP;
+        return this;
     }
 
     public boolean isDefaultTop() {
         return DEFAULT_TOP;
     }
 
-    public void setDefaultTop(boolean DEFAULT_TOP) {
+    public SaturnEdmContext setDefaultTop(boolean DEFAULT_TOP) {
         this.DEFAULT_TOP = DEFAULT_TOP;
+        return this;
     }
 
     public Map<String, Class<?>> getEntitySets() {

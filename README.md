@@ -31,3 +31,14 @@ class           |      |
 EntityProcessor | todo |
 PrimitiveProcessor| todo |
 ExpressionVisitor.visitBinaryOperator|todo|
+
+datasource -> entityOperation
+^
+|
+service
+^
+|
+repository
+
+don't need the service
+just has repo -> entityOperation
