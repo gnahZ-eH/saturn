@@ -33,6 +33,7 @@ import com.github.saturn.odata.utils.ExceptionUtils;
 
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriResource;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
@@ -42,22 +43,21 @@ import org.apache.olingo.server.api.uri.UriResourceNavigation;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.springframework.context.ApplicationContext;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.List;
 
 public class BaseTypeProcessor extends SaturnProcessor {
 
-    protected Map<String, EntityOperation> entityOperationMap;
-    protected Map<String, CustomOperation<?>> functionMap;
+    protected Map<String, EntityOperation> entityOperationMap = new HashMap<>();
+    protected Map<String, CustomOperation<?>> functionMap = new HashMap<>();
 
     protected UriResource getResourceFromUriInfo(UriInfo uriInfo) {
         return uriInfo.getUriResourceParts().get(uriInfo.getUriResourceParts().size() - 1);
     }
 
-    protected void generateOperationMap(Map<String, EntityOperation> entityOperationMap,
-                                            Map<String, CustomOperation<?>> functionMap,
-                                            ApplicationContext applicationContext) {
+    protected void generateOperationMap(ApplicationContext applicationContext) {
         applicationContext
                 .getBeansOfType(EntityOperation.class)
                 .forEach((key, entityOperation) -> entityOperationMap.put(entityOperation.forEntity(), entityOperation));
@@ -73,7 +73,7 @@ public class BaseTypeProcessor extends SaturnProcessor {
                 });
     }
 
-    protected Object readByEntityOperation(UriResourceNavigation uriResourceNavigation, EdmEntitySet edmEntitySet, Object superObject, SelectOption selectOption, ExpandOption expandOption) throws SaturnODataException {
+    protected Object readByEntityOperation(UriResourceNavigation uriResourceNavigation, EdmEntitySet edmEntitySet, Object superObject, SelectOption selectOption, ExpandOption expandOption) throws SaturnODataException, ODataApplicationException {
 
         // can also use EntitySet
         // todo need to test here
@@ -88,7 +88,7 @@ public class BaseTypeProcessor extends SaturnProcessor {
         return entityOperation.retrieveByKey(parameterMap, queryOptions, superObject);
     }
 
-    protected Object readByEntityOperation(UriResourceEntitySet uriResourceEntitySet, SelectOption selectOption, ExpandOption expandOption) throws SaturnODataException {
+    protected Object readByEntityOperation(UriResourceEntitySet uriResourceEntitySet, SelectOption selectOption, ExpandOption expandOption) throws SaturnODataException, ODataApplicationException {
 
         // can also use EntitySet
         // todo need to test here
@@ -103,7 +103,7 @@ public class BaseTypeProcessor extends SaturnProcessor {
         return entityOperation.retrieveByKey(parameterMap, queryOptions, null);
     }
 
-    protected Object readByEntityOperation(UriResourceEntitySet uriResourceEntitySet) throws SaturnODataException {
+    protected Object readByEntityOperation(UriResourceEntitySet uriResourceEntitySet) throws SaturnODataException, ODataApplicationException {
         return readByEntityOperation(uriResourceEntitySet, null, null);
     }
 }

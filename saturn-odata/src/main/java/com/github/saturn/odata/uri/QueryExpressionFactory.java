@@ -119,12 +119,16 @@ public class QueryExpressionFactory {
         return null;
     }
 
-    private QueryExpressionFactory setQueryOptions(QueryOptions queryOptions) {
+    public QueryExpressionFactory setQueryOptions(QueryOptions queryOptions) {
         this.queryOptions = queryOptions;
 
         if (queryOptions != null) {
-            queryOptions.getFilterOption().ifPresent(option -> this.filterOption = option);
-            queryOptions.getOrderByOption().ifPresent(option -> this.orderByOption = option);
+            if (queryOptions.getFilterOption() != null) {
+                queryOptions.getFilterOption().ifPresent(option -> this.filterOption = option);
+            }
+            if (queryOptions.getOrderByOption() != null) {
+                queryOptions.getOrderByOption().ifPresent(option -> this.orderByOption = option);
+            }
         }
         return this;
     }

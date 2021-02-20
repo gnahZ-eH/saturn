@@ -55,7 +55,7 @@ public class SaturnEdmContext {
     private String DEFAULT_EDM_PKG = null;
     private String CONTAINER_NAME = null;
     private String SERVICE_ROOT = null;
-    private Integer TOP_MAX_VALUE = 0;
+    private Integer TOP_MAX_VALUE = Integer.MAX_VALUE;
     private boolean DEFAULT_SKIP = true;
     private boolean DEFAULT_TOP = true;
 

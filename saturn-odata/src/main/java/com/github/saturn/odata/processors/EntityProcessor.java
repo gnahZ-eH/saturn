@@ -83,7 +83,7 @@ public class EntityProcessor extends BaseTypeProcessor implements org.apache.oli
 
     public EntityProcessor initialize(SaturnEdmContext saturnEdmContext, ApplicationContext applicationContext) {
         super.initialize(saturnEdmContext);
-        super.generateOperationMap(entityOperationMap, functionMap, applicationContext);
+        super.generateOperationMap(applicationContext);
         return this;
     }
 
@@ -110,7 +110,7 @@ public class EntityProcessor extends BaseTypeProcessor implements org.apache.oli
 
     // todo need to be tested
     // only one result will be returned
-    private void readEntity(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException {
+    private void readEntity(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException, ODataApplicationException {
 
         List<UriResource> uriResourceParts = uriInfo.getUriResourceParts();
         UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResourceParts.get(0);
@@ -130,7 +130,7 @@ public class EntityProcessor extends BaseTypeProcessor implements org.apache.oli
     }
 
     // todo need to be tested
-    private void readNaviEntity(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException {
+    private void readNaviEntity(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException, ODataApplicationException {
 
         List<UriResource> uriResourceParts = uriInfo.getUriResourceParts();
 
@@ -171,7 +171,7 @@ public class EntityProcessor extends BaseTypeProcessor implements org.apache.oli
             UriResourceEntitySet uriResourceEntitySet,
             UriResourceNavigation uriResourceNavigation,
             Object superObject,
-            boolean isNavi) throws SaturnODataException {
+            boolean isNavi) throws SaturnODataException, ODataApplicationException {
 
         SelectOption selectOption = uriInfo.getSelectOption();
         ExpandOption expandOption = uriInfo.getExpandOption();
@@ -267,7 +267,7 @@ public class EntityProcessor extends BaseTypeProcessor implements org.apache.oli
         }
     }
 
-    private void readEntities(ODataRequest oDataRequest, ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException, SerializerException {
+    private void readEntities(ODataRequest oDataRequest, ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException, SerializerException, ODataApplicationException {
 
         List<UriResource> uriResourceParts = uriInfo.getUriResourceParts();
         UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResourceParts.get(0);
@@ -368,7 +368,7 @@ public class EntityProcessor extends BaseTypeProcessor implements org.apache.oli
                 if (objects.size() <= topOption.getValue()) {
                     nextLink = null;
                 }
-                objects = objects.subList(0, topOption.getValue());
+                objects = objects.subList(0, Math.min(topOption.getValue(), objects.size()));
             } else {
                 long allCount = entityOperation.count(queryOptions);
                 if (allCount - (skipOption == null ? 0 : skipOption.getValue()) <= topOption.getValue()) {

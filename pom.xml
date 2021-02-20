@@ -12,6 +12,7 @@
 
     <modules>
         <module>saturn-odata</module>
+        <module>saturn-example</module>
     </modules>
 
     <parent>

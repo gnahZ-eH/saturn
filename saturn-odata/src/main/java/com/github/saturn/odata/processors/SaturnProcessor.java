@@ -52,6 +52,7 @@ import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.apache.olingo.server.api.OData;
+import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.deserializer.DeserializerException;
 import org.apache.olingo.server.api.processor.Processor;
@@ -501,7 +502,7 @@ public class SaturnProcessor implements Processor {
 
             return fromObject2Entity(object, null);
 
-        } catch (DeserializerException | SaturnODataException | IllegalAccessException e) {
+        } catch (DeserializerException | SaturnODataException | IllegalAccessException | ODataApplicationException e) {
             throw new SaturnODataException(HttpStatusCode.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }

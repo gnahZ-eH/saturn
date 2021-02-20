@@ -32,12 +32,13 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "t_student")
 @ODataEntityType(namespace = "", name = "Student", keys = "Id")
 @ODataEntitySet(name = "Students")
-public class Student {
+public class Student implements Serializable {
 
     @ODataProperty(name = "Id")
     @Id  @Column(name = "Id")

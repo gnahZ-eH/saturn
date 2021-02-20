@@ -65,7 +65,7 @@ public class PrimitiveProcessor extends BaseTypeProcessor implements org.apache.
 
     public PrimitiveProcessor initialize(SaturnEdmContext saturnEdmContext, ApplicationContext applicationContext) {
         super.initialize(saturnEdmContext);
-        super.generateOperationMap(entityOperationMap, functionMap, applicationContext);
+        super.generateOperationMap(applicationContext);
         return this;
     }
 
@@ -84,7 +84,7 @@ public class PrimitiveProcessor extends BaseTypeProcessor implements org.apache.
         }
     }
 
-    private void readPrimitive(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException, SerializerException {
+    private void readPrimitive(ODataResponse oDataResponse, UriInfo uriInfo, ContentType contentType) throws SaturnODataException, SerializerException, ODataApplicationException {
         UriResource resource = getResourceFromUriInfo(uriInfo);
         UriResourceProperty uriResourceProperty = (UriResourceProperty) resource;
         EdmProperty edmProperty = uriResourceProperty.getProperty();

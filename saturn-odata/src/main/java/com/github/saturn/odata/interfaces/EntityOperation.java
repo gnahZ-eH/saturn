@@ -26,6 +26,7 @@ package com.github.saturn.odata.interfaces;
 
 import com.github.saturn.odata.uri.QueryOptions;
 
+import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.UriParameter;
 
 import java.util.List;
@@ -41,19 +42,19 @@ public interface EntityOperation {
      * @param superObject
      * @return             edm defined by selves.
      */
-    Object create(Object object, Object superObject);
+    Object create(Object object, Object superObject) throws ODataApplicationException;
 
-    Object retrieveByKey(Map<String, UriParameter> parameterMap, QueryOptions queryOptions, Object superObject);
+    Object retrieveByKey(Map<String, UriParameter> parameterMap, QueryOptions queryOptions, Object superObject) throws ODataApplicationException;
 
-    default Object retrieveByKey(Map<String, UriParameter> parameterMap) {
+    default Object retrieveByKey(Map<String, UriParameter> parameterMap) throws ODataApplicationException {
         return retrieveByKey(parameterMap, null, null);
     }
 
-    List<?> retrieveAll(QueryOptions queryOptions, Object superObject);
+    List<?> retrieveAll(QueryOptions queryOptions, Object superObject) throws ODataApplicationException;
 
-    Object update(Map<String, UriParameter> parameterMap, List<String> properties, Object object, Object superObject);
+    Object update(Map<String, UriParameter> parameterMap, List<String> properties, Object object, Object superObject) throws ODataApplicationException;
 
-    Object delete(Map<String, UriParameter> parameterMap, Object superObject);
+    Object delete(Map<String, UriParameter> parameterMap, Object superObject) throws ODataApplicationException;
 
-    Long count(QueryOptions queryOptions);
+    Long count(QueryOptions queryOptions) throws ODataApplicationException;
 }
