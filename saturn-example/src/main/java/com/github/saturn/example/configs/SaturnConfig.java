@@ -55,6 +55,9 @@ public class SaturnConfig implements WebMvcConfigurer {
     @Value("${saturn.default-package}")
     private String DEFAULT_PACKAGE;
 
+    @Value("100")
+    private Integer TOP_MAX_VALUE;
+
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -77,6 +80,7 @@ public class SaturnConfig implements WebMvcConfigurer {
                 .setContainerName(CONTAINER_NAME)
                 .setNameSpace(NAME_SPACE)
                 .setServiceRoot(SERVICE_ROOT)
+                .setTopMaxValue(TOP_MAX_VALUE)
                 .initialize();
     }
 

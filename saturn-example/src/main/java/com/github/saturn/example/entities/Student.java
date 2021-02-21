@@ -36,13 +36,13 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "t_student")
-@ODataEntityType(namespace = "", name = "Student", keys = "Id")
+@ODataEntityType(namespace = "", name = "Student", keys = "Id", jpaEntity = Student.class)
 @ODataEntitySet(name = "Students")
 public class Student implements Serializable {
 
     @ODataProperty(name = "Id")
     @Id  @Column(name = "Id")
-    private long id;
+    private int id;
 
     @ODataProperty(name = "Name")
     @Column(name = "Name")
@@ -52,11 +52,11 @@ public class Student implements Serializable {
     @Column(name = "Age")
     private int age;
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 

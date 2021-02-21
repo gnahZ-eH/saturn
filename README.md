@@ -42,3 +42,45 @@ repository
 
 don't need the service
 just has repo -> entityOperation
+
+
+### Request Example
+
+#### Metadata
+```
+{
+	"$Version": "4.01",
+	"com.github.saturn.example": {
+		"Student": {
+			"$Kind": "EntityType",
+			"$Key": ["Id"],
+			"Id": {
+				"$Type": "Edm.Int64"
+			},
+			"Name": {
+				"$Type": "Edm.String"
+			},
+			"Age": {
+				"$Type": "Edm.Int32"
+			}
+		},
+		"SaturnExample": {
+			"$Kind": "EntityContainer",
+			"Students": {
+				"$Kind": "EntitySet",
+				"$Type": ".Student"
+			}
+		}
+	}
+}
+```
+#### JSON format
+- Read collection
+  - http://localhost:8080/saturn-odata/Students?$format=json
+- Read Entity By Key
+  - http://localhost:8080/saturn-odata/Students(Id=1)?$format=json
+- Read some fields
+  - http://localhost:8080/saturn-odata/Students?$format=json&$select=Age
+
+#### XML format
+http://localhost:8080/saturn-odata/Students

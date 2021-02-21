@@ -33,11 +33,13 @@ import com.github.saturn.odata.uri.QueryOptions;
 
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.uri.UriParameter;
+import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class StudentOperation implements EntityOperation {
@@ -66,7 +68,12 @@ public class StudentOperation implements EntityOperation {
 
     @Override
     public Object retrieveByKey(Map<String, UriParameter> parameterMap, QueryOptions queryOptions, Object superObject) {
-        return null;
+        UriParameter parameter = parameterMap.getOrDefault("Id", null);
+        if (parameter == null) {
+            throw new ServiceException("Entity Id should not be null.");
+        }
+        Optional<Student> student = studentRepository.findById(Integer.valueOf(parameter.getText()));
+        return student.orElse(null);
     }
 
     @Override

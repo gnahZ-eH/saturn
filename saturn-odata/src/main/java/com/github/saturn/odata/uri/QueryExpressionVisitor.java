@@ -200,13 +200,13 @@ public class QueryExpressionVisitor extends AbstractExpressionVisitor {
             for (Field field : fields) {
                 if (field.getName().equals(fieldName)) {
                     entity = field.getType();
-                    if (entity.isAssignableFrom(Integer.class)) {
+                    if (entity.isAssignableFrom(Integer.class) || entity.isAssignableFrom(int.class)) {
                         return pathBuilder.getNumber(fieldName, (Class<Integer>) entity);
-                    } else if (entity.isAssignableFrom(Long.class)) {
+                    } else if (entity.isAssignableFrom(Long.class) || entity.isAssignableFrom(long.class)) {
                         return pathBuilder.getNumber(fieldName, (Class<Long>) entity);
                     } else if (entity.isAssignableFrom(String.class)) {
                         return pathBuilder.getString(fieldName);
-                    } else if (entity.isAssignableFrom(Boolean.class)) {
+                    } else if (entity.isAssignableFrom(Boolean.class) || entity.isAssignableFrom(boolean.class)) {
                         return pathBuilder.getBoolean(fieldName);
                     } else if (entity.isAssignableFrom(Date.class)) {
                         return pathBuilder.getDate(fieldName, (Class<Date>) entity);
